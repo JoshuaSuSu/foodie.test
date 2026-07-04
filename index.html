@@ -1,0 +1,1538 @@
+<title>踩點簿</title>
+<style>
+:root{
+  --paper:#efe9dc;
+  --ink:#2a2420;
+  --ink-soft:#6b6158;
+  --ink-faint:#8f8577;
+  --card:#f8f5ec;
+  --card-border:rgba(42,36,32,.14);
+  --accent:#3f6b52;
+  --accent-strong:#2e5741;
+  --accent-soft:rgba(63,107,82,.14);
+  --amber:#b9711f;
+  --line:rgba(42,36,32,.16);
+  --shadow:0 1px 2px rgba(42,36,32,.06), 0 8px 24px -12px rgba(42,36,32,.18);
+  --radius:14px;
+  --font-display:"Avenir Next","Segoe UI Semibold","Helvetica Neue",system-ui,sans-serif;
+  --font-body:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,"SF Mono","Cascadia Code","Menlo",monospace;
+  --map-land:#e8e0cd;
+  --map-border:rgba(42,36,32,.32);
+  --map-label:rgba(42,36,32,.55);
+  --map-sea:#dce4e0;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#17140f;
+    --ink:#ede7da;
+    --ink-soft:#a79e90;
+    --ink-faint:#7c7364;
+    --card:#221d16;
+    --card-border:rgba(237,231,218,.12);
+    --accent:#5fa37d;
+    --accent-strong:#7bc79a;
+    --accent-soft:rgba(95,163,125,.16);
+    --amber:#e3a455;
+    --line:rgba(237,231,218,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 28px -14px rgba(0,0,0,.6);
+    --map-land:#241f16;
+    --map-border:rgba(237,231,218,.28);
+    --map-label:rgba(237,231,218,.5);
+    --map-sea:#10161a;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17140f;
+  --ink:#ede7da;
+  --ink-soft:#a79e90;
+  --ink-faint:#7c7364;
+  --card:#221d16;
+  --card-border:rgba(237,231,218,.12);
+  --accent:#5fa37d;
+  --accent-strong:#7bc79a;
+  --accent-soft:rgba(95,163,125,.16);
+  --amber:#e3a455;
+  --line:rgba(237,231,218,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 12px 28px -14px rgba(0,0,0,.6);
+  --map-land:#241f16;
+  --map-border:rgba(237,231,218,.28);
+  --map-label:rgba(237,231,218,.5);
+  --map-sea:#10161a;
+}
+:root[data-theme="light"]{
+  --paper:#efe9dc;
+  --ink:#2a2420;
+  --ink-soft:#6b6158;
+  --ink-faint:#8f8577;
+  --card:#f8f5ec;
+  --card-border:rgba(42,36,32,.14);
+  --accent:#3f6b52;
+  --accent-strong:#2e5741;
+  --accent-soft:rgba(63,107,82,.14);
+  --amber:#b9711f;
+  --line:rgba(42,36,32,.16);
+  --shadow:0 1px 2px rgba(42,36,32,.06), 0 8px 24px -12px rgba(42,36,32,.18);
+  --map-land:#e8e0cd;
+  --map-border:rgba(42,36,32,.32);
+  --map-label:rgba(42,36,32,.55);
+  --map-sea:#dce4e0;
+}
+*{box-sizing:border-box;}
+.hidden{display:none !important;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+.app{
+  max-width:640px;
+  margin:0 auto;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  padding-bottom:96px;
+}
+::selection{background:var(--accent-soft);}
+
+/* ---------- header ---------- */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  padding:18px 18px 0;
+}
+.brand{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+}
+.brand h1{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:22px;
+  letter-spacing:.02em;
+  margin:0;
+}
+.brand h1 small{
+  display:block;
+  font-family:var(--font-body);
+  font-weight:500;
+  font-size:12px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin-top:2px;
+}
+.stats{
+  display:flex;
+  gap:14px;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  font-size:12px;
+  color:var(--ink-soft);
+  white-space:nowrap;
+}
+.stats b{color:var(--ink);font-size:14px;}
+
+/* tabs */
+.tabs{
+  display:flex;
+  gap:4px;
+  margin-top:16px;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:9px 4px;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink-soft);
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+  user-select:none;
+  transition:color .15s ease;
+}
+.tab.active{color:var(--accent-strong);border-bottom-color:var(--accent);}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ---------- decide panel ---------- */
+.decide{
+  margin:16px 18px 4px;
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+}
+.decide-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.decide-btn{
+  flex:1;
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:16px;
+  letter-spacing:.03em;
+  color:#fff;
+  background:var(--accent);
+  border:none;
+  border-radius:10px;
+  padding:14px 16px;
+  cursor:pointer;
+  transition:background .15s ease, transform .1s ease;
+}
+.decide-btn:hover{background:var(--accent-strong);}
+.decide-btn:active{transform:scale(.98);}
+.decide-scope{
+  font-size:12px;
+  color:var(--ink-soft);
+  background:transparent;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:13px 10px;
+  font-family:var(--font-body);
+  cursor:pointer;
+}
+.decide-result{
+  margin-top:14px;
+  border-top:1px dashed var(--line);
+  padding-top:14px;
+  display:none;
+}
+.decide-result.show{display:block;animation:reveal .28s ease;}
+@keyframes reveal{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion: reduce){.decide-result.show{animation:none;}}
+.decide-empty{color:var(--ink-soft);font-size:13px;padding-top:2px;}
+.near-toggle{
+  display:flex;align-items:center;gap:7px;
+  margin-top:12px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+  cursor:pointer;
+  user-select:none;
+}
+.near-toggle.disabled{opacity:.45;pointer-events:none;}
+.near-toggle input{accent-color:var(--accent);}
+.decide-card .name{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:19px;
+  text-wrap:balance;
+}
+.decide-card .meta{
+  margin-top:4px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+}
+.decide-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+.btn-line{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:13px;
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--ink);
+  border-radius:8px;
+  padding:8px 12px;
+  cursor:pointer;
+}
+.btn-line:hover{border-color:var(--accent);color:var(--accent-strong);}
+
+/* ---------- filters ---------- */
+.filters{
+  margin:14px 18px 0;
+  display:flex;
+  gap:8px;
+}
+.search{
+  flex:1;
+  font-family:var(--font-body);
+  font-size:14px;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--card);
+  color:var(--ink);
+}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.area-select{
+  font-family:var(--font-body);
+  font-size:13px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--card);
+  color:var(--ink);
+  max-width:120px;
+}
+
+/* ---------- toolbar / location ---------- */
+.toolbar2{
+  margin:10px 18px 0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+.view-toggle{width:132px;flex:0 0 auto;}
+.loc-btn{
+  font-family:var(--font-body);
+  font-size:12.5px;
+  font-weight:600;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--card);
+  color:var(--ink);
+  cursor:pointer;
+  white-space:nowrap;
+}
+.loc-btn:hover{border-color:var(--accent);}
+.loc-btn.active{border-color:var(--accent);color:var(--accent-strong);background:var(--accent-soft);}
+.loc-status{
+  margin:8px 18px 0;
+  font-size:12px;
+  color:var(--ink-soft);
+  min-height:16px;
+}
+.loc-status.error{color:#b5484a;}
+
+/* ---------- map ---------- */
+.map-wrap{
+  margin:14px 18px 0;
+  position:relative;
+  height:60vh;
+  min-height:340px;
+  background:var(--map-sea);
+  border:1px solid var(--card-border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.map-svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;}
+.map-svg.grabbing{cursor:grabbing;}
+.map-hint{
+  position:absolute;top:8px;left:8px;z-index:2;
+  font-size:11px;color:var(--ink-faint);
+  background:var(--paper);
+  padding:4px 9px;
+  border-radius:6px;
+  opacity:.9;
+  pointer-events:none;
+  max-width:60%;
+}
+.map-note{
+  position:absolute;top:8px;right:8px;z-index:2;
+  font-size:11px;color:var(--ink-faint);
+  background:var(--paper);
+  padding:4px 9px;
+  border-radius:6px;
+  opacity:.9;
+  max-width:38%;
+  text-align:right;
+  line-height:1.4;
+}
+.map-empty{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;color:var(--ink-faint);font-size:13px;
+  padding:0 30px;
+}
+.map-controls{
+  position:absolute;right:10px;bottom:10px;z-index:2;
+  display:flex;flex-direction:column;gap:6px;
+}
+.map-controls button{
+  width:32px;height:32px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--ink);
+  font-size:16px;
+  font-family:var(--font-mono);
+  cursor:pointer;
+  line-height:1;
+}
+.map-controls button:hover{border-color:var(--accent);color:var(--accent-strong);}
+.map-callout{
+  position:absolute;z-index:3;
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  padding:10px 12px;
+  max-width:190px;
+  transform:translate(-50%,-116%);
+}
+.map-callout .name{font-weight:700;font-size:13px;text-wrap:balance;}
+.map-callout .meta{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+.map-callout button{
+  margin-top:8px;
+  font-size:12px;font-weight:700;
+  color:#fff;background:var(--accent);
+  border:none;border-radius:6px;
+  padding:6px 11px;cursor:pointer;
+  font-family:var(--font-body);
+}
+.county-shape{fill:var(--map-land);stroke:var(--map-border);stroke-width:1.4;pointer-events:none;}
+.county-label{
+  fill:var(--map-label);
+  font-family:var(--font-body);
+  font-size:12px;
+  font-weight:600;
+  text-anchor:middle;
+  pointer-events:none;
+  letter-spacing:.02em;
+}
+.map-point-want{fill:var(--card);stroke:var(--ink-faint);stroke-width:1.5;stroke-dasharray:2 2;}
+.map-point-visited{fill:var(--accent);stroke:var(--card);stroke-width:1.5;}
+.map-point.selected{stroke:var(--amber) !important;stroke-width:2.5 !important;}
+.map-me-ring{fill:none;stroke:var(--accent-strong);stroke-width:2;opacity:.55;transform-box:fill-box;transform-origin:center;animation:mapPulse 1.8s ease-out infinite;}
+.map-me-dot{fill:var(--accent-strong);stroke:var(--paper);stroke-width:2;}
+@keyframes mapPulse{
+  0%{transform:scale(.4);opacity:.55;}
+  100%{transform:scale(1.6);opacity:0;}
+}
+@media (prefers-reduced-motion: reduce){.map-me-ring{animation:none;opacity:.25;}}
+
+/* ---------- list ---------- */
+.list{
+  margin:14px 18px 0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.empty-state{
+  text-align:center;
+  color:var(--ink-faint);
+  font-size:13px;
+  padding:40px 0;
+}
+.card{
+  position:relative;
+  background:var(--card);
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  transition:border-color .15s ease;
+}
+.card:hover{border-color:var(--accent);}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.stamp{
+  flex-shrink:0;
+  width:34px;height:34px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);
+  font-size:11px;font-weight:700;
+  border:1.5px solid currentColor;
+}
+.stamp.visited{color:var(--accent);}
+.stamp.want{color:var(--ink-faint);border-style:dashed;}
+.card-body{flex:1;min-width:0;}
+.card-body .name{
+  font-weight:700;
+  font-size:14.5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.card-body .sub{
+  margin-top:2px;
+  font-size:12px;
+  color:var(--ink-soft);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.card-rating{
+  flex-shrink:0;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  font-size:13px;
+  color:var(--amber);
+  font-weight:700;
+}
+
+/* ---------- fab ---------- */
+.fab{
+  position:fixed;
+  right:calc(50% - 320px + 20px);
+  bottom:24px;
+  width:52px;height:52px;
+  border-radius:50%;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  font-size:26px;
+  line-height:1;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  z-index:25;
+}
+@media (max-width:680px){
+  .fab{right:20px;}
+}
+.fab:hover{background:var(--accent-strong);}
+
+/* ---------- modal ---------- */
+.modal-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.4);
+  z-index:40;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+.modal-backdrop.hidden{display:none;}
+.modal{
+  background:var(--paper);
+  width:100%;
+  max-width:640px;
+  max-height:88vh;
+  overflow-y:auto;
+  border-radius:18px 18px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 30px rgba(0,0,0,.25);
+}
+@media (min-width:700px){
+  .modal-backdrop{align-items:center;}
+  .modal{border-radius:16px;max-height:80vh;}
+}
+.modal-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--line);
+  margin:0 auto 16px;
+}
+.modal h2{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:20px;
+  margin:0 0 2px;
+  text-wrap:balance;
+}
+.field-group{margin-top:16px;}
+.field-label{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin-bottom:6px;
+  display:block;
+}
+.field-value{font-size:14px;color:var(--ink);}
+.field-value a{color:var(--accent-strong);}
+.field-value.note{white-space:pre-wrap;line-height:1.6;}
+input[type=text], textarea, select.input{
+  width:100%;
+  font-family:var(--font-body);
+  font-size:14px;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--card);
+  color:var(--ink);
+}
+textarea{min-height:64px;resize:vertical;}
+.row2{display:flex;gap:10px;}
+.row2 > *{flex:1;}
+.pill-toggle{
+  display:flex;
+  border:1px solid var(--line);
+  border-radius:8px;
+  overflow:hidden;
+}
+.pill-toggle button{
+  flex:1;
+  border:none;
+  background:transparent;
+  color:var(--ink-soft);
+  font-size:13px;
+  font-weight:600;
+  padding:9px 0;
+  cursor:pointer;
+}
+.pill-toggle button.active{background:var(--accent);color:#fff;}
+.modal-actions{
+  display:flex;
+  gap:8px;
+  margin-top:22px;
+}
+.btn-primary{
+  flex:1;
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:14px;
+  color:#fff;
+  background:var(--accent);
+  border:none;
+  border-radius:10px;
+  padding:12px;
+  cursor:pointer;
+}
+.btn-primary:hover{background:var(--accent-strong);}
+.btn-danger{
+  font-size:13px;
+  font-weight:600;
+  color:#b5484a;
+  background:transparent;
+  border:1px solid rgba(181,72,74,.35);
+  border-radius:10px;
+  padding:12px 16px;
+  cursor:pointer;
+}
+.btn-danger:hover{background:rgba(181,72,74,.08);}
+.close-x{
+  position:absolute;
+  top:16px;right:16px;
+  border:none;background:transparent;
+  color:var(--ink-faint);
+  font-size:20px;
+  cursor:pointer;
+  line-height:1;
+  padding:4px;
+}
+.stars-input{display:flex;gap:6px;}
+.stars-input button{
+  border:none;background:transparent;
+  font-size:22px;
+  color:var(--line);
+  cursor:pointer;
+  font-family:var(--font-mono);
+}
+.stars-input button.on{color:var(--amber);}
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <h1>踩點簿<small>Where to eat, decided</small></h1>
+      <div class="stats"><span><b id="statVisited">0</b> 去過</span><span><b id="statWant">0</b> 想去</span></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-scope="all">全部</div>
+      <div class="tab" data-scope="visited">去過</div>
+      <div class="tab" data-scope="want">想去</div>
+    </div>
+  </header>
+
+  <section class="decide">
+    <div class="decide-row">
+      <button class="decide-btn" id="decideBtn">決定我要吃什麼</button>
+      <select class="decide-scope" id="decideScope">
+        <option value="all">從全部抽</option>
+        <option value="want">只從想去的抽</option>
+        <option value="visited">只從去過的抽</option>
+      </select>
+    </div>
+    <label class="near-toggle disabled" id="nearToggle">
+      <input type="checkbox" id="nearCheck" /> 優先抽附近 5 公里內的店
+    </label>
+    <div class="decide-result" id="decideResult"></div>
+  </section>
+
+  <section class="filters">
+    <input class="search" id="search" type="text" placeholder="搜尋店名、地址、筆記…" />
+    <select class="area-select" id="areaSelect"><option value="">所有地區</option></select>
+  </section>
+
+  <section class="toolbar2">
+    <select class="area-select" id="sortSelect">
+      <option value="default">預設排序</option>
+      <option value="distance">離我最近</option>
+      <option value="rating">評分最高</option>
+    </select>
+    <div class="pill-toggle view-toggle" id="viewToggle">
+      <button data-view="list" class="active">列表</button>
+      <button data-view="map">地圖</button>
+    </div>
+    <button class="loc-btn" id="locateBtn">定位我的位置</button>
+    <button class="loc-btn" id="manualPinBtn">手動設定位置</button>
+  </section>
+  <div class="loc-status" id="locStatus"></div>
+
+  <section class="list" id="list"></section>
+
+  <section class="map-wrap hidden" id="mapWrap">
+    <div class="map-hint">拖曳平移・滾輪縮放・點點看詳情</div>
+    <div class="map-note hidden" id="mapNote"></div>
+    <svg id="mapSvg" class="map-svg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="map-callout hidden" id="mapCallout"></div>
+    <div class="map-controls">
+      <button id="mapZoomIn" aria-label="放大" type="button">+</button>
+      <button id="mapZoomOut" aria-label="縮小" type="button">－</button>
+      <button id="mapReset" aria-label="重新置中" type="button">⟳</button>
+    </div>
+  </section>
+
+  <button class="fab" id="addFab" title="新增餐廳" aria-label="新增餐廳">+</button>
+</div>
+
+<div class="modal-backdrop hidden" id="detailBackdrop">
+  <div class="modal" id="detailModal"></div>
+</div>
+
+<div class="modal-backdrop hidden" id="addBackdrop">
+  <div class="modal" id="addModalBody"></div>
+</div>
+
+<script type="application/json" id="seed-data">[{"name": "霸味羊肉爐-台南旗艦店", "address": "704台灣臺南市北區大和里中華北路一段508號", "lat": 23.0171234, "lng": 120.1914944, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xb8c0102c0c2cd13d", "date": "2016-02-04T09:18:21.201Z", "source": "review", "rating": 3, "note": "", "visited": true, "id": 193, "area": "台南市北區"}, {"name": "MoreCafe 摸咖啡", "address": "111台灣臺北市士林區福佳里文林路587巷19號", "lat": 25.0978923, "lng": 121.5219786, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xe60e40f23b713f5", "date": "2020-02-06T12:26:54.539993Z", "source": "review", "rating": 5, "note": "無意間發現家附近新開的咖啡店，空間很舒服，價位親民，有插座可以充電，擺設很好看，希望下次老闆可以撥點慢節奏的音樂😂\n工作累了還可以到外面的河堤散散步！！", "visited": true, "id": 192, "area": "台北市士林區"}, {"name": "香香小吃", "address": "111台灣臺北市士林區仁勇里文林路144巷7號", "lat": 25.0886802, "lng": 121.5269996, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xc62cab62485bb31e", "date": "2020-02-07T10:08:32.771108Z", "source": "review", "rating": 5, "note": "有人情味的小店，野菇雞肉蓋飯和咖哩飯都很好吃", "visited": true, "id": 191, "area": "台北市士林區"}, {"name": "何記手工蒸餃", "address": "111台灣臺北市士林區忠誠里德行東路138號", "lat": 25.1079176, "lng": 121.5292718, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xb4b46e04a5ee8598", "date": "2020-02-11T10:17:53.589930Z", "source": "review", "rating": 3, "note": "蒸餃料多，但較沒有湯汁，皮有點厚。\n搭配酸辣湯整體還不錯。", "visited": true, "id": 190, "area": "台北市士林區"}, {"name": "下大道蘭米糕", "address": "700台灣臺南市中西區南廠里康樂街6號", "lat": 22.9898958, "lng": 120.1939339, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x2ad2c29ac6c7a4a0", "date": "2020-02-22T14:26:33.457557Z", "source": "review", "rating": 5, "note": "米糕淋上滷汁香又順口，吃一口就停不下來。\n再加一顆滷鴨蛋，絕配。", "visited": true, "id": 189, "area": "台南市中西區"}, {"name": "双生綠豆沙牛奶 Shuànsên Beverages", "address": "700台灣臺南市中西區南美里民族路二段281號", "lat": 22.9964127, "lng": 120.2034936, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x20a3af429da352a4", "date": "2020-02-22T14:30:25.409712Z", "source": "review", "rating": 4, "note": "牛奶份量多，綠豆沙有些甜。", "visited": true, "id": 188, "area": "台南市中西區"}, {"name": "阿財牛肉湯", "address": "708台灣臺南市安平區天妃里古堡街5號", "lat": 22.9994764, "lng": 120.1614754, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xc9aab3b5a8e96226", "date": "2020-02-23T06:23:42.857267Z", "source": "review", "rating": 4, "note": "滷肉飯味道屬於清淡肥肉型，不算重口味。\n牛肉湯湯頭中濃，入口回味，但層次不夠，肉可以在嫩一點🐂🐂🐂", "visited": true, "id": 187, "area": "台南市安平區"}, {"name": "武聖夜市", "address": "700台灣臺南市中西區光賢里武聖路69巷", "lat": 23.003458, "lng": 120.1905098, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xc9d5491f9112950f", "date": "2020-02-23T10:16:35.209136Z", "source": "review", "rating": 4, "note": "夜市攤位總類多。\n拜託請管理單位增設垃圾桶，整個夜市看不到幾個垃圾桶，看到很多人直接丟垃圾在地上，很髒亂。", "visited": true, "id": 186, "area": "台南市中西區"}, {"name": "懷舊小棧杏仁豆腐冰", "address": "700台灣臺南市中西區郡王里五妃街206號", "lat": 22.9827368, "lng": 120.2052614, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x96e4f7f7cb713181", "date": "2020-02-23T10:20:41.084314Z", "source": "review", "rating": 5, "note": "綜合口味，內含綠豆、紅豆、薏仁料很多。\n一碗才55元很划算，建議點杏仁或抹茶口味，牛奶味道較淡，可以微微加點煉乳，清涼爽口好吃！", "visited": true, "id": 185, "area": "台南市中西區"}, {"name": "陳家蚵捲", "address": "708台灣臺南市安平區天妃里安平路786號", "lat": 23.0003688, "lng": 120.1616719, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x97653f0a42fcd0e2", "date": "2020-02-23T10:22:09.120725Z", "source": "review", "rating": 2, "note": "中規中矩，蝦派和柯捲沒有特別讓人驚艷。\n很失望...", "visited": true, "id": 184, "area": "台南市安平區"}, {"name": "阜杭豆漿", "address": "100台灣臺北市中正區幸福里忠孝東路一段108號2樓", "lat": 25.0442333, "lng": 121.5248433, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x9f8ad0b871ef2d1e", "date": "2020-02-25T06:49:13.621626Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 183, "area": "台北市中正區"}, {"name": "Burger & Co", "address": "No. 49, No. 49通安街通安里大安區臺北市台灣 106", "lat": 25.031255, "lng": 121.5533627, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x8cab5609377b86ac", "date": "2020-02-25T06:49:24.756353Z", "source": "review", "rating": 3, "note": "", "visited": true, "id": 182, "area": "台北市"}, {"name": "YOLO'S CAFE 民權撫順店", "address": "104台灣臺北市中山區集英里撫順街35-1號號1樓", "lat": 25.0635324, "lng": 121.5197841, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xf4131d2c0a7eefc9", "date": "2020-02-27T08:59:46.273285Z", "source": "review", "rating": 4, "note": "價格超級親民，東西好吃。\n還有提供插座，太棒了吧👍", "visited": true, "id": 181, "area": "台北市中山區"}, {"name": "阿宗芋冰城", "address": "261台灣宜蘭縣頭城鎮城東里青雲路三段267號", "lat": 24.8587861, "lng": 121.8259573, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x833b72c5383b8775", "date": "2020-02-28T09:19:04.267541Z", "source": "review", "rating": 5, "note": "每次來衝浪都會特地買來吃，最喜歡芋頭和紫米口味，每一口都能吃到顆粒，不會很膩，下次來嚐嚐別的口味。", "visited": true, "id": 180, "area": "宜蘭縣頭城鎮"}, {"name": "阿嬤蔥油餅", "address": "261台灣宜蘭縣頭城鎮頂埔里三和路18號", "lat": 24.844993, "lng": 121.807418, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd9bbd864a4bf6345", "date": "2020-02-28T09:39:40.229506Z", "source": "review", "rating": 4, "note": "油煎蔥油餅，皮厚、蔥超多，蛋煎的剛剛好，不會太焦，咬下去還有蛋的軟嫩感，蔥香甜撲鼻，驚為天人，不過皮建議可以更有味道。\n\n🔹 點餐重點\n1. 一定要趁熱吃\n2. 一定要加蛋🥚\n3. 一定要加辣", "visited": true, "id": 179, "area": "宜蘭縣頭城鎮"}, {"name": "隱家拉麵 士林店", "address": "111台灣臺北市士林區福林里中山北路五段505巷22號", "lat": 25.0932112, "lng": 121.5271313, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd3780288c1b99726", "date": "2020-03-07T05:58:55.048918Z", "source": "review", "rating": 5, "note": "沒想到士林竟然有隱藏一間這麼好吃的拉麵！\n湯頭偏重口味，肉不是那種軟嫩叉燒，屬於有嚼勁的肉，香味濃郁，很棒！", "visited": true, "id": 178, "area": "台北市士林區"}, {"name": "南平鵝肉專賣店", "address": "330台灣桃園市桃園區莊敬里南平路206號", "lat": 25.0195383, "lng": 121.3012571, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd7970e9ce9841952", "date": "2020-03-08T00:27:18.536424Z", "source": "review", "rating": 5, "note": "鵝肉超級好吃，肉質甜，必點鵝油飯", "visited": true, "id": 177, "area": "桃園市桃園區"}, {"name": "dark corner cafe", "address": "108台灣臺北市萬華區萬壽里漢口街二段90巷8弄3號二樓", "lat": 25.0458798, "lng": 121.5041566, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x496052ba046cece3", "date": "2020-03-08T00:27:52.670530Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 176, "area": "台北市萬華區"}, {"name": "半路餐酒 HALFWAY THERE", "address": "106台灣臺北市大安區義安里文昌街24號", "lat": 25.0328121, "lng": 121.5496162, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x1556ff09e04ef389", "date": "2020-03-08T00:28:02.189113Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 175, "area": "台北市大安區"}, {"name": "采宏牛肉麵-原建宏牛肉麵", "address": "108台灣臺北市萬華區福星里西寧南路27號1樓", "lat": 25.0478727, "lng": 121.5075038, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x713c3942e872dca2", "date": "2020-03-08T00:28:12.576922Z", "source": "review", "rating": 3, "note": "", "visited": true, "id": 174, "area": "台北市萬華區"}, {"name": "鳥人拉麵 中山店", "address": "10491台灣臺北市中山區正得里中山北路一段105巷7號", "lat": 25.0509626, "lng": 121.5229033, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xb1831c40cd4e5fe0", "date": "2020-03-08T00:28:32.432425Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 173, "area": "台北市中山區"}, {"name": "阿堂鍋貼水餃", "address": "111台灣臺北市士林區天福里天母東路8巷21-5號", "lat": 25.1174343, "lng": 121.5322928, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x1d318c837dd80890", "date": "2020-03-09T14:41:19.619105Z", "source": "review", "rating": 4, "note": "鍋貼緊緊地把湯汁包住，值得佳許。\n酸辣湯普通，韭黃口味的水餃和鍋貼很特別，肉味不會很重，適當。", "visited": true, "id": 172, "area": "台北市士林區"}, {"name": "737巷美食街", "address": "114台灣臺北市內湖區內湖路一段737巷", "lat": 25.079738, "lng": 121.5786619, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x5496806f8ee649b1", "date": "2020-03-22T17:25:55.635739Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 171, "area": "台北市內湖區"}, {"name": "海底撈火鍋 板橋店", "address": "220台灣新北市板橋區福丘里新站路28號5 樓", "lat": 25.0135629, "lng": 121.4668278, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x76868ca18d11b1a4", "date": "2020-03-22T17:26:13.266864Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 170, "area": "新北市板橋區"}, {"name": "船軒鄉村煙燻滷味", "address": "110台灣臺北市信義區永吉里松山路119巷1弄3之1號", "lat": 25.0475957, "lng": 121.5783712, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x90431abf16f16ab", "date": "2020-03-22T17:26:57.727097Z", "source": "review", "rating": 4, "note": "煙燻滷味真的很推", "visited": true, "id": 169, "area": "台北市信義區"}, {"name": "TIECAFE", "address": "一樓, No. 56號成功路二段426巷湖興里內湖區臺北市台灣 114", "lat": 25.0702883, "lng": 121.588293, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x36a565681b39eca6", "date": "2020-06-11T12:45:09.411086Z", "source": "review", "rating": 5, "note": "超級隱密的地點\n擺設很美，舒服自在的感覺\n有機會還會再來拜訪", "visited": true, "id": 168, "area": "台北市"}, {"name": "福記-豬腸冬粉，油飯，乾麵", "address": "111台灣臺北市士林區福德里基河路311號", "lat": 25.0924827, "lng": 121.5208465, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x631cb602e9399e67", "date": "2020-10-25T04:20:20.814315Z", "source": "review", "rating": 5, "note": "油飯淋上甜醬好吃。\n豬肉湯必點", "visited": true, "id": 167, "area": "台北市士林區"}, {"name": "家鄉味水餃", "address": "10491台灣臺北市中山區集英里中山北路二段96巷19號", "lat": 25.0598846, "lng": 121.5220188, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xc8d7f8cfc02744af", "date": "2020-11-14T05:10:23.784307Z", "source": "review", "rating": 3, "note": "水餃皮不錯，有嚼勁。\n韭菜口味蠻好吃的。", "visited": true, "id": 166, "area": "台北市中山區"}, {"name": "麵魂家", "address": "265台灣宜蘭縣羅東鎮漢民里南門路140號", "lat": 24.6731082, "lng": 121.7655084, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x7631a11a6f09696a", "date": "2021-01-17T15:46:41.433262Z", "source": "review", "rating": 5, "note": "東台灣最強拉麵🍜實至名歸啦👍", "visited": true, "id": 165, "area": "宜蘭縣羅東鎮"}, {"name": "坪感覺 Just Pinglin 茶食農創空間", "address": "232台灣新北市坪林區坪林里坪林街12號", "lat": 24.9362131, "lng": 121.7119294, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xcebfc1f148a10d88", "date": "2021-01-17T15:58:05.955632Z", "source": "review", "rating": 5, "note": "食物精緻健康，每道料理都是採用當地食材。\n大推掛包，份量很足，滷到軟嫩的控肉搭配手工饅頭，真的很好吃。\n價格稍偏貴，適合大人🧑🏽，男生來一定要點個掛包啦🤩", "visited": true, "id": 164, "area": "新北市坪林區"}, {"name": "濟善老麵 ｜請移駕至小碧潭店", "address": "108台灣臺北市萬華區頂碩里艋舺大道120巷11弄1號", "lat": 25.0329091, "lng": 121.5023681, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x54d566b7093958e3", "date": "2021-01-17T16:00:21.038839Z", "source": "review", "rating": 5, "note": "第一次嘗試到清湯的拉麵。\n還可以添加袖子酒、袖子醬\n同時吃到三種層次的湯頭，非常推薦。", "visited": true, "id": 163, "area": "台北市萬華區"}, {"name": "文昌炸醬麵(無分店）", "address": "260台灣宜蘭縣宜蘭市南門里文昌路37號", "lat": 24.7579147, "lng": 121.7514739, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x96629e1faf389614", "date": "2021-01-17T16:02:58.848962Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 162, "area": "宜蘭縣宜蘭市"}, {"name": "米塔義式廚房-南京店", "address": "104台灣臺北市中山區正得里南京東路一段24號2樓", "lat": 25.0519003, "lng": 121.5236746, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xb789e78e1afebf53", "date": "2021-05-03T12:11:14.908962Z", "source": "review", "rating": 5, "note": "服務很棒，義大利麵🍝很好吃😋用餐環境很舒服", "visited": true, "id": 161, "area": "台北市中山區"}, {"name": "麵屋昕家", "address": "114台灣臺北市內湖區明湖里康寧路三段189巷11弄12號1樓", "lat": 25.0706382, "lng": 121.6124219, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xa61ac0ae9be5870b", "date": "2021-05-04T15:55:32.752762Z", "source": "review", "rating": 4, "note": "湯頭濃郁，整體給8分", "visited": true, "id": 160, "area": "台北市內湖區"}, {"name": "不二家拉麵(周二公休,無訂位)", "address": "10491台灣臺北市中山區中山里中山北路二段59巷10號", "lat": 25.055845, "lng": 121.523513, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x86bc9d6de5b4a54f", "date": "2021-09-11T14:23:33.170277Z", "source": "review", "rating": 4, "note": "台式拉麵 80分🌟", "visited": true, "id": 159, "area": "台北市中山區"}, {"name": "下麵", "address": "202台灣基隆市中正區正濱里正濱路96號3樓", "lat": 25.15336, "lng": 121.7693936, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x254679c36c5e223f", "date": "2021-09-28T15:48:41.923929Z", "source": "review", "rating": 4, "note": "海鮮🦞 很新鮮\n南洋酸辣的口味很好吃", "visited": true, "id": 158, "area": "基隆市中正區"}, {"name": "佳吉碳烤饅頭", "address": "928台灣屏東縣東港鎮新勝里中正路128號", "lat": 22.4675871, "lng": 120.4504603, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xdea9ae978ff7b68c", "date": "2021-10-31T06:10:10.934869Z", "source": "review", "rating": 4, "note": "唯一支持煉乳烤饅頭", "visited": true, "id": 157, "area": "屏東縣東港鎮"}, {"name": "劍潭肉圓王", "address": "111台灣臺北市士林區明勝里承德路四段12巷38號", "lat": 25.0805042, "lng": 121.5202521, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xc439170f5a8b7547", "date": "2021-11-09T16:44:05.638561Z", "source": "review", "rating": 2, "note": "傳統蒸肉圓，一份兩顆40元，稍貴，CP值不高", "visited": true, "id": 156, "area": "台北市士林區"}, {"name": "初二咖啡", "address": "103台灣臺北市大同區涼州街106號2樓", "lat": 25.060509, "lng": 121.5098167, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd147581a0f774e8e", "date": "2021-12-04T13:49:25.054618Z", "source": "review", "rating": 5, "note": "晚上的大稻埕安靜到讓人舒適，能停留在這好好吃盤水餃，感受小小空間的溫暖，好棒！！\n水餃很好吃🥟 謝謝妳們❤️", "visited": true, "id": 155, "area": "台北市大同區"}, {"name": "Joe's Bro Pizza喬手作披薩", "address": "542台灣南投縣草屯鎮碧峰里碧興路一段839號", "lat": 23.9717397, "lng": 120.6533447, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xe9e9b0a9bdaa0d63", "date": "2021-12-31T04:25:50.483056Z", "source": "review", "rating": 5, "note": "特製辣肉醬超好吃！！！", "visited": true, "id": 154, "area": "南投縣草屯鎮"}, {"name": "R bar 逸庭", "address": "11141台灣臺北市士林區福林里中山北路五段470巷8號1樓", "lat": 25.093179, "lng": 121.5291354, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xffe60025e82533b0", "date": "2022-01-15T06:53:07.930651Z", "source": "review", "rating": 1, "note": "", "visited": true, "id": 153, "area": "台北市士林區"}, {"name": "圓頭肉乾金門農牧概念館-金門美食 金門牛肉麵 金門牛肉火鍋 金門牛肉乾 金門名產 金門伴手禮 金門必吃 附近餐廳", "address": "892金門縣金寧鄉伯玉路二段169號", "lat": 24.4394173, "lng": 118.3346169, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x9cf3368e64f069a5", "date": "2022-02-27T08:02:27.940803Z", "source": "review", "rating": 5, "note": "湯頭鮮美！非常值得推薦", "visited": true, "id": 152, "area": "金門縣金寧鄉"}, {"name": "脆皮麻辣臭豆腐，大腸肉羹麵線，肉圓", "address": "111台灣臺北市士林區芝山里德行東路281號", "lat": 25.1101167, "lng": 121.5358442, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x28a11bbbfdaf0043", "date": "2022-03-01T12:03:11.814868Z", "source": "review", "rating": 4, "note": "", "visited": true, "id": 151, "area": "台北市士林區"}, {"name": "竹東阿英鮮肉湯包", "address": "310台灣新竹縣竹東鎮榮樂里東林路67號", "lat": 24.7370931, "lng": 121.0907985, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd0967e199cd822f", "date": "2022-03-07T13:56:55.978507Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 150, "area": "新竹縣竹東鎮"}, {"name": "我愛脆皮鮮奶甜甜圈", "address": "105台灣臺北市松山區莊敬里撫遠街374號", "lat": 25.0637132, "lng": 121.5657425, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xa74c7908e1806ad9", "date": "2022-03-18T05:33:14.561173Z", "source": "review", "rating": 4, "note": "", "visited": true, "id": 149, "area": "台北市松山區"}, {"name": "流Bar Flow Cocktail調酒｜Wine 紅酒｜Whisky威士忌 ｜Beer 啤酒", "address": "10491台灣臺北市中山區晴光里雙城街32巷12-1號", "lat": 25.0661356, "lng": 121.5231825, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x3fa7f60964d347a", "date": "2022-03-25T14:34:42.673552Z", "source": "review", "rating": 5, "note": "調酒很好喝！！", "visited": true, "id": 148, "area": "台北市中山區"}, {"name": "雨農小館", "address": "111台灣臺北市士林區福志里雨農路45號", "lat": 25.0993775, "lng": 121.5323631, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x515fff0d43577935", "date": "2022-04-10T15:44:52.500169Z", "source": "review", "rating": 0, "note": "傳統乾麵真的很好吃！！", "visited": true, "id": 147, "area": "台北市士林區"}, {"name": "早吧 Morning Bar", "address": "111台灣臺北市士林區福佳里美崙街32號", "lat": 25.0972355, "lng": 121.5229084, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xdd3224241f9e9b21", "date": "2022-04-10T15:55:36.884325Z", "source": "review", "rating": 5, "note": "大推一號餐蛋餅", "visited": true, "id": 146, "area": "台北市士林區"}, {"name": "六姐傳統飯糰特製蛋餅專賣店（搬家囉）", "address": "803台灣高雄市鹽埕區光明里新樂街151號", "lat": 22.6243588, "lng": 120.2844255, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xcbee14e69f022ef4", "date": "2022-04-10T16:01:12.584308Z", "source": "review", "rating": 5, "note": "粉漿蛋餅🥞！！", "visited": true, "id": 145, "area": "其他"}, {"name": "老江紅茶牛奶 成功店", "address": "801台灣高雄市前金區榮復里成功一路244號", "lat": 22.6182599, "lng": 120.296281, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x23006c38662ee3c9", "date": "2022-04-10T16:11:19.410185Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 144, "area": "其他"}, {"name": "小貨車蔥油餅", "address": "111台灣臺北市士林區聖山里德行東路224號", "lat": 25.1091053, "lng": 121.5326403, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xf53947808dbff56", "date": "2022-04-10T17:10:19.063222Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 143, "area": "台北市士林區"}, {"name": "現燙蚵仔麵線、炸臭豆腐", "address": "116台灣臺北市文山區萬祥里羅斯福路五段263號號旁", "lat": 25.0011593, "lng": 121.539501, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xafb90784d24b67c0", "date": "2022-05-01T10:13:08.546474Z", "source": "review", "rating": 4, "note": "臭豆腐⭐️⭐️⭐️⭐️\n豆腐炸得非常酥脆，台式泡菜的味道有加乘效果，好吃。\n\n蚵仔麵線⭐️⭐️⭐️\n麵線本身味道層次並不多，算是清淡口味蚵仔新鮮，如果喜歡住口味的朋友，醋要加多一點。", "visited": true, "id": 142, "area": "台北市文山區"}, {"name": "滬上雞莊麵食館(樂業店)", "address": "106台灣臺北市大安區芳和里樂業街106號", "lat": 25.0211428, "lng": 121.5515866, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x713e59d9dc1ff8b2", "date": "2022-05-01T12:35:07.131329Z", "source": "review", "rating": 5, "note": "讚到不行，川味雞味道濃厚配飯超好吃", "visited": true, "id": 141, "area": "台北市大安區"}, {"name": "牛肉麵舖子", "address": "114台灣臺北市內湖區金龍里成功路四段212號", "lat": 25.0845109, "lng": 121.5958331, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xead2f3a8e5113b6a", "date": "2022-05-01T12:50:33.999642Z", "source": "review", "rating": 4, "note": "紅燒牛肉麵辣度適中，湯頭不會死鹹，牛肉不軟爛，屬於扎實肉質。\n小菜令人驚訝，涼拌高麗菜絲很爽口", "visited": true, "id": 140, "area": "台北市內湖區"}, {"name": "竹壽司", "address": "11670台灣臺北市文山區萬祥里羅斯福路六段9號", "lat": 25.000299, "lng": 121.539863, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x85eed93e2953bea4", "date": "2022-05-01T13:06:22.417378Z", "source": "review", "rating": 4, "note": "", "visited": true, "id": 139, "area": "台北市文山區"}, {"name": "新禾料理廚房 Culina Nova", "address": "10491台灣臺北市中山區康樂里長春路82號1F", "lat": 25.0548124, "lng": 121.5266462, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xe9f702577b0b5e00", "date": "2022-05-22T08:28:49.997318Z", "source": "review", "rating": 4, "note": "乾拌麵真的很好吃！\n牛肉湯不是台式牛肉湯，胡椒味的牛肉湯真的好喝", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 138, "area": "台北市中山區"}, {"name": "獨特花生湯", "address": "116台灣臺北市文山區興豐里興隆路一段293號", "lat": 24.9987619, "lng": 121.544714, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xe4290de59063c36", "date": "2022-06-12T05:51:57.935529Z", "source": "review", "rating": 4, "note": "", "visited": true, "id": 137, "area": "台北市文山區"}, {"name": "又一村水餃‧麵食。遼寧創始店", "address": "104台灣臺北市中山區力行里遼寧街47號", "lat": 25.0488389, "lng": 121.5422626, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x175c17f7a841b89", "date": "2022-08-21T13:22:50.720002Z", "source": "review", "rating": 2, "note": "水餃也太乾\n湯非常死鹹", "visited": true, "id": 136, "area": "台北市中山區"}, {"name": "西蜀饌牛肉麵", "address": "105台灣臺北市松山區中正里敦化北路120巷78之2號", "lat": 25.0542557, "lng": 121.5463067, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x929fa20659ad5846", "date": "2022-10-09T12:13:20.499634Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 135, "area": "台北市松山區"}, {"name": "如常小食堂 松山店", "address": "105台灣臺北市松山區中正里南京東路三段256巷55號", "lat": 25.0491119, "lng": 121.5445943, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xee4b9a86d2bdc8b2", "date": "2022-10-25T05:07:15.605165Z", "source": "review", "rating": 5, "note": "料多實在，暖暖的一碗粥\n用餐環境也非常舒適乾淨", "visited": true, "id": 134, "area": "台北市松山區"}, {"name": "向上水餃", "address": "403台灣臺中市西區公益里中美街183號", "lat": 24.1470768, "lng": 120.6600863, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xceffa46d361dcbac", "date": "2022-10-25T05:12:18.826327Z", "source": "review", "rating": 3, "note": "水餃一顆3元\n建議點15顆左右比較會有飽足感\n水餃餡一般水準，價格親民的小吃店\n酸辣湯有點稀，不是那種黏稠度很高的勾芡", "visited": true, "id": 133, "area": "台中市西區"}, {"name": "鮮道口福牛肉麵", "address": "408台灣臺中市南屯區田心里向心路99號", "lat": 24.1409958, "lng": 120.6452256, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x543c3755507c482f", "date": "2022-10-25T05:19:16.094770Z", "source": "review", "rating": 4, "note": "大碗CP值高的牛肉麵店\n選擇多樣，小菜蠻好吃的", "mealType": "午餐", "price": "$400-600", "visited": true, "id": 132, "area": "台中市南屯區"}, {"name": "三好一公道涼麵攤", "address": "104台灣臺北市中山區力行里長安東路二段171-7號", "lat": 25.0483864, "lng": 121.5420783, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x38f7190c127e1fe6", "date": "2022-11-27T05:00:19.531594Z", "source": "review", "rating": 4, "note": "醬汁清爽順口", "mealType": "午餐", "visited": true, "id": 131, "area": "台北市中山區"}, {"name": "王艇長酢醬麵", "address": "111台灣臺北市士林區前港里前港街18號", "lat": 25.0845738, "lng": 121.5225126, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x92e7e9cff61b779d", "date": "2022-12-28T15:21:01.325834Z", "source": "review", "rating": 4, "note": "炸醬麵麵條有嚼勁，炸醬香氣十足，鹹和肉香搭配的恰到好處。牛肉湯讓我特別驚艷！\n\n這間店值得四顆🌟🌟🌟🌟", "mealType": "晚餐", "price": "$1-200", "visited": true, "id": 130, "area": "台北市士林區"}, {"name": "松英水餃麵店 (副總麵)", "address": "114台灣臺北市內湖區行善里行善路27號", "lat": 25.0563559, "lng": 121.575809, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x73f299a314dc3285", "date": "2022-12-28T15:22:42.986941Z", "source": "review", "rating": 4, "note": "副總麵大碗划算，小菜有夠便宜\n堪稱內湖CP值最高的麵店", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 129, "area": "台北市內湖區"}, {"name": "老媽米粉湯/捷運南京三民站傳統小吃/南京公寓市場美食/古早味必吃三十年老店/早餐午餐晚餐", "address": "105台灣臺北市松山區安平里南京東路五段291巷29弄1號", "lat": 25.0529113, "lng": 121.5661994, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x4e856c36e3511bd7", "date": "2023-01-18T01:44:58.148507Z", "source": "review", "rating": 3, "note": "", "mealType": "早餐", "visited": true, "id": 128, "area": "台北市松山區"}, {"name": "Vault cafe & Bar", "address": "103台灣臺北市大同區雙連里萬全街22號", "lat": 25.0582692, "lng": 121.5204982, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x77bb47c97bb1af70", "date": "2023-01-18T17:00:26.380041Z", "source": "review", "rating": 5, "note": "超喜歡這間酒吧！很溫馨", "visited": true, "id": 127, "area": "台北市大同區"}, {"name": "洪記豆漿大王南港店", "address": "189號, 南港路一段南港里南港區臺北市台灣 115", "lat": 25.0552443, "lng": 121.6120769, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x81de519159a276aa", "date": "2023-01-27T14:42:27.060317Z", "source": "review", "rating": 2, "note": "熱豆漿米漿完全沒有味道\n鐵板麵味道也不夠\n\n整體蠻失望的", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 126, "area": "台北市"}, {"name": "阿三意麵", "address": "737台灣臺南市鹽水區月港里康樂路56號", "lat": 23.3194667, "lng": 120.2686476, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd18ffe8877013583", "date": "2023-02-04T08:29:52.834965Z", "source": "review", "rating": 4, "note": "乾意麵肉臊香氣足，味道不會死鹹，但和台南意麵相比缺少了一股甜味，價錢CP值超高，來台南鹽水值得一試！\n\n燕肉就是炸餛飩，有點冷掉了，建議消費者點完後再炸！！小小失望😢", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 125, "area": "台南市鹽水區"}, {"name": "與山咖啡", "address": "737台灣臺南市鹽水區月港里中正路37號之6", "lat": 23.3197265, "lng": 120.2679414, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xe7929890a6c4c821", "date": "2023-02-05T04:19:01.777133Z", "source": "review", "rating": 4, "note": "很舒服的咖啡店！\n拿鐵很好喝，杯墊是用花磚做的，很精緻", "mealType": "其他", "price": "$1-200", "visited": true, "id": 124, "area": "台南市鹽水區"}, {"name": "玉梅鮮乳包子饅頭", "address": "736台灣臺南市柳營區八翁里八翁村107-1號", "lat": 23.2686015, "lng": 120.3008846, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x8be68733ebf49e95", "date": "2023-02-05T07:01:42.080355Z", "source": "review", "rating": 3, "note": "鮮奶肉包內餡是筍絲、青蔥、豬肉組成，肉不會油膩，也沒有肉耗味，算是口味相對清淡，可能是冷掉了，現場吃不是很滿意。\n\n芝麻包冷掉，沒辦法吃到流沙的芝麻，建議回家回蒸！不適合遊客購買！\n\n鮮奶布丁🍮不是那種綿密的布丁，味道普通！\n整體價格很便宜，應該算是當地人的早點食物。", "mealType": "其他", "price": "$1-200", "visited": true, "id": 123, "area": "台南市柳營區"}, {"name": "華味香 鴨|羹 新進店", "address": "730台灣臺南市新營區民榮里新進路二段474號", "lat": 23.3027291, "lng": 120.3028204, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xc31bcf1c610f512d", "date": "2023-02-06T06:12:34.236384Z", "source": "review", "rating": 4, "note": "鴨肉羹勾芡鮮甜，淋上特製滷肉，再加點醋和醬油，麵條屬於較硬的白意麵，中午配上熱熱的一碗，如果喜歡甜甜的羹湯，這絕對是最合適的選擇！\n\n鴨胸肉份量很足，滷菜也非常好吃，用餐環境很乾淨整潔，但食物整體沒有到超級驚訝，可以說很好吃，但缺少了一些有特色，突出的味道！", "mealType": "午餐", "price": "$200-400", "visited": true, "id": 122, "area": "台南市新營區"}, {"name": "鹽水夜市", "address": "737台灣臺南市鹽水區清湶路137號", "lat": 23.3234418, "lng": 120.268494, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xf8c1ae7e7189e312", "date": "2023-02-06T06:18:08.858108Z", "source": "review", "rating": 3, "note": "鹽水蜂炮時造訪的夜市，攤販種類很多，不重複性很高！", "visited": true, "id": 121, "area": "台南市鹽水區"}, {"name": "懷香餃子麵棧", "address": "221台灣新北市汐止區橫科里橫科路6號", "lat": 25.0512238, "lng": 121.6176414, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd456854afffa485e", "date": "2023-02-19T03:37:40.762459Z", "source": "review", "rating": 4, "note": "", "mealType": "午餐", "price": "$200-400", "visited": true, "id": 120, "area": "新北市汐止區"}, {"name": "Do家海鮮飯＆面", "address": "115台灣臺北市南港區中研里研究院路二段5巷Road2-1號", "lat": 25.0471395, "lng": 121.6156649, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x67e5c88c9a21d869", "date": "2023-04-05T12:20:54.043123Z", "source": "review", "rating": 5, "note": "CP值超高的海鮮麵\n有多種主食可以選擇，鍋燒麵、雞絲麵、烏龍麵\n小卷、鮮蚵非常新鮮，沒有過多的調味，可以吃到海鮮的鮮甜，湯頭清爽！", "mealType": "晚餐", "price": "$1-200", "visited": true, "id": 119, "area": "台北市南港區"}, {"name": "四季喫茶店｜Sukui Café", "address": "200台灣基隆市仁愛區忠勇里愛五路6巷19弄2號", "lat": 25.1277341, "lng": 121.7451789, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xccf8a2c344074907", "date": "2023-06-22T10:56:52.120878Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 118, "area": "基隆市仁愛區"}, {"name": "小湯烏 湯專門店", "address": "106台灣臺北市大安區正聲里光復南路240巷3號", "lat": 25.0405784, "lng": 121.5571607, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xb86118d4e528af47", "date": "2023-07-11T05:17:24.321572Z", "source": "review", "rating": 5, "note": "", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 117, "area": "台北市大安區"}, {"name": "卡洛貍健康餐盒_內湖行善店", "address": "114台灣臺北市內湖區湖元里行善路60號1樓", "lat": 25.0569515, "lng": 121.5761061, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xb97406f84db2ac2a", "date": "2023-08-09T05:04:07.075522Z", "source": "review", "rating": 3, "note": "東西味道不變，感覺換包裝後，有縮水的感覺", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 116, "area": "台北市內湖區"}, {"name": "三川田輕麻辣風麵食館", "address": "115010台灣臺北市南港區三重里三重路67巷3號", "lat": 25.0606717, "lng": 121.6136926, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xa595dec10710721c", "date": "2023-08-21T04:28:35.135943Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 115, "area": "台北市南港區"}, {"name": "五漁村丼飯屋", "address": "11443台灣臺北市內湖區西湖里內湖路一段285巷59弄14號", "lat": 25.0839467, "lng": 121.5676163, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x8749a12301354bc7", "date": "2023-09-11T14:43:58.791184Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 114, "area": "台北市內湖區"}, {"name": "植佐咖啡花室 Zhi Zuo Floral cafe | 創意舒肥健康餐", "address": "700台灣臺南市中西區城隍里民族路二段57巷16號", "lat": 22.9935773, "lng": 120.2099084, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x49e7635e1e039717", "date": "2023-11-04T04:20:02.832668Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 113, "area": "台南市中西區"}, {"name": "阿樺油飯肉羹", "address": "114台灣臺北市內湖區週美里新明路380巷1號", "lat": 25.0551765, "lng": 121.5804243, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd913c1f6133b947d", "date": "2023-11-24T11:47:18.855164Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 112, "area": "台北市內湖區"}, {"name": "三合鐵板燒", "address": "115台灣臺北市南港區舊莊里舊莊街一段43號", "lat": 25.0414393, "lng": 121.6183976, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xa111defa314b6e6e", "date": "2023-12-20T14:04:16.173985Z", "source": "review", "rating": 5, "note": "", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 111, "area": "台北市南港區"}, {"name": "福隆月台便當", "address": "11488台灣臺北市內湖區五分里東湖路24-1號", "lat": 25.0687132, "lng": 121.6132038, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x29b343ce0fa07eb7", "date": "2023-12-28T16:26:53.092038Z", "source": "review", "rating": 4, "note": "沒什麼好挑惕的👍\n有菜有肉有豆乾，重點‼️還有一顆「完整」的滷蛋，這樣才75元！CP值真的很高！", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 110, "area": "台北市內湖區"}, {"name": "『 放空自我“場租“咖啡廳 』", "address": "115台灣臺北市南港區富康街30號1樓", "lat": 25.0537927, "lng": 121.617113, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x45445b09cdc326b0", "date": "2023-12-28T16:32:36.223005Z", "source": "review", "rating": 5, "note": "南港獨立咖啡店不多！這間絕對是👍\n我點了一杯冰滴咖啡，風味甘醇，濃而不澀不苦，布丁🍮中規中矩！\n\n這間咖啡店讓我最驚豔的是老闆音樂品味！太好聽了！整間咖啡店的氛圍非常舒服，很適合帶一本書或電腦來這邊放空！\n\n感謝老闆給我一個這麼棒的午後時光！\n\n（老闆播的歌我都收藏起來了❤️", "mealType": "其他", "price": "$1-200", "visited": true, "id": 109, "area": "台北市南港區"}, {"name": "昆陽鍋貼專賣店", "address": "115台灣臺北市南港區新光里昆陽街150-2號", "lat": 25.0490714, "lng": 121.5941298, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x6fa6f27376fbe9c4", "date": "2023-12-28T16:36:22.375675Z", "source": "review", "rating": 4, "note": "", "mealType": "晚餐", "price": "$1-200", "visited": true, "id": 108, "area": "台北市南港區"}, {"name": "開餵食堂", "address": "115台灣臺北市南港區中南里中南街154號", "lat": 25.051642, "lng": 121.615267, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xaed7827610c9b70f", "date": "2024-01-04T16:35:25.124033Z", "source": "review", "rating": 5, "note": "南港有這麼溫馨的小店，非常幸福\n食物CP值超高，偶爾還會出現菜單上沒有的私房料理！老闆和老闆娘熱情招待每一位客人，是可以真心感受到他們對於食物的用心！\n\n感謝🙏 讓我在冷冷的天，還能吃到這麼有溫度的食物！", "visited": true, "id": 107, "area": "台北市南港區"}, {"name": "三本手工拉麵（素食餐廳）", "address": "104台灣臺北市中山區中央里建國北路二段26號", "lat": 25.053091, "lng": 121.5364392, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x3d13cd5c5807f1b6", "date": "2024-01-07T09:27:21.461331Z", "source": "review", "rating": 4, "note": "", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 106, "area": "台北市中山區"}, {"name": "高姊藥燉排骨", "address": "221台灣新北市汐止區橫科路10號", "lat": 25.0512026, "lng": 121.6178027, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd0394675ad852d34", "date": "2024-01-09T10:45:13.169482Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 105, "area": "新北市汐止區"}, {"name": "都日式涮涮鍋汐止宜興店", "address": "221台灣新北市汐止區宜興里宜興街13號", "lat": 25.0416323, "lng": 121.6213758, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x5b497beaed46435c", "date": "2024-02-24T12:16:27.800506Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 104, "area": "新北市汐止區"}, {"name": "三葉千座 串烤", "address": "115台灣臺北市南港區中南里中南街43號", "lat": 25.0539106, "lng": 121.6153326, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xa62c436b8702a63a", "date": "2024-02-27T13:15:45.299834Z", "source": "review", "rating": 5, "note": "東西非常好吃", "visited": true, "id": 103, "area": "台北市南港區"}, {"name": "Beer李精釀小酒館（酒館 bar craft beer)", "address": "115台灣臺北市南港區中南里中南街16號", "lat": 25.0548086, "lng": 121.6152026, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x55d720e91cf00cc", "date": "2024-08-17T14:47:05.832592Z", "source": "review", "rating": 5, "note": "很優質的啤酒Bar🍺\n音樂好聽，啤酒選擇很多，老闆很有耐心清楚的介紹！ 以後一定常來🤩", "price": "$1-200", "visited": true, "id": 102, "area": "台北市南港區"}, {"name": "辣吉點正宗成都串串香林森條通店-中山四川麻辣串串|麻辣火鍋|人氣鍋物|平價火鍋|大陸美食|四川撸串|在地推薦火鍋", "address": "104台灣臺北市中山區正義里林森北路119巷2號", "lat": 25.0506328, "lng": 121.5253152, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xfcbfe24a88166600", "date": "2024-08-24T13:13:17.374554Z", "source": "review", "rating": 5, "note": "非常好吃，建議可以從中辣開始點，如果太辣可以再加清湯🔥 食物非常好吃！", "mealType": "晚餐", "price": "$400-600", "visited": true, "id": 101, "area": "台北市中山區"}, {"name": "實話咖哩 日式熟成咖哩專賣 南軟店", "address": "115台灣臺北市南港區南港里新民街68號", "lat": 25.0559098, "lng": 121.6113656, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x48c3c9422d87c861", "date": "2025-02-01T15:55:21.231595Z", "source": "review", "rating": 4, "note": "咖哩飯可以搭配炸雞、豬排、排骨\n排骨讓人驚訝，有特殊醃製過，現在已經很少吃到這麼傳統好吃的炸排骨！\n咖哩因為是大量蔬果，吃起來不會很膩，淡淡蔬果的甜味，非常好吃！\n唯一建議是飯希望能是硬一點的口感", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 100, "area": "台北市南港區"}, {"name": "安打烏醋麵丨生炒羊肉丨沙灘車體驗", "address": "272台灣宜蘭縣南澳鄉南強里蘇花路二段186號", "lat": 24.4639665, "lng": 121.7988274, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xae223e180e835c25", "date": "2025-02-01T16:00:14.463417Z", "source": "review", "rating": 3, "note": "烏醋麵很特別，可以來嘗試看看\n剝皮辣椒雞湯是雞翅，讓人小失望，湯的味道也太清淡", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 99, "area": "宜蘭縣南澳鄉"}, {"name": "來加咖啡", "address": "970台灣花蓮縣花蓮市民族里中山路131巷5號", "lat": 23.9753504, "lng": 121.610229, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xaef7fc8a91e1fa19", "date": "2025-02-01T16:06:04.051517Z", "source": "review", "rating": 5, "note": "環島途中經過花蓮，回到背包客棧的夜晚時，無意間發現的咖啡店！店內有一個投影幕，聽說還可以點自己想要看的電影🤩\n燈光氣氛很舒服，店員親切介紹，鬆餅和馬卡龍真的非常好吃！尤其是鬆餅的口感，外酥內軟！ 未來還有機會，希望還能再來拜訪✌️", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 98, "area": "花蓮縣花蓮市"}, {"name": "原粹蔬食作", "address": "231台灣新北市新店區北新路三段206巷1弄7號3號出口旁7-11巷內走路2分鐘大坪林站", "lat": 24.9846188, "lng": 121.541563, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x90ac42d1f3b38530", "date": "2025-02-01T17:05:37.692584Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 97, "area": "新北市新店區"}, {"name": "金剛好 便當", "address": "962台灣臺東縣長濱鄉長濱村58_1號", "lat": 23.3263641, "lng": 121.4610565, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x73ecd9577bf255e5", "date": "2025-02-01T17:11:08.006622Z", "source": "review", "rating": 5, "note": "排骨便當很好吃", "visited": true, "id": 96, "area": "台東縣長濱鄉"}, {"name": "紀家肉粽(端午節需提前預定)", "address": "357台灣苗栗縣通霄鎮新埔里8鄰56之三號", "lat": 24.5368949, "lng": 120.6947001, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x940bb323ff89022b", "date": "2025-02-01T17:17:21.802899Z", "source": "review", "rating": 4, "note": "位於鐵道旁邊不起眼的肉粽店，粽子口味偏重，濃郁胡椒味，可以吃到整顆蛋黃，內有大塊的三層肉和香菇，招牌肉粽料多實在，有經過一定要試試看！", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 95, "area": "苗栗縣通霄鎮"}, {"name": "馨光牛排（西湖市場66攤）", "address": "114台灣臺北市內湖區Neihu District內湖路一段285號2樓", "lat": 25.0825195, "lng": 121.5666463, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xfbe8f1322ce22153", "date": "2025-04-15T05:23:15.823355Z", "source": "review", "rating": 4, "note": "Cp值高的評價牛排\n麵條不是一般牛排店的那種，屬於早餐店類型，我覺得蠻好吃的", "visited": true, "id": 94, "area": "台北市內湖區"}, {"name": "東海龍門客棧美食仙草凍芋圓之家總店", "address": "434台灣臺中市龍井區新東里新興路1巷19號", "lat": 24.1808302, "lng": 120.5927234, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x66523dda7958f606", "date": "2025-07-12T05:10:05.465579Z", "source": "review", "rating": 5, "note": "", "visited": true, "id": 93, "area": "台中市龍井區"}, {"name": "輕靚美 健康餐盒x機能蔬果飲 台北內科店 排毒瘦身LINE開團", "address": "114台灣臺北市內湖區西湖里基湖路3巷38號1樓", "lat": 25.0807186, "lng": 121.5665901, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xff409c6ed738415", "date": "2025-07-21T14:36:32.275608Z", "source": "review", "rating": 5, "note": "非常好吃！食材新鮮好吃，調味清淡！\n下次會再嘗試其他口味！", "visited": true, "id": 92, "area": "台北市內湖區"}, {"name": "火火燒肉販賣所 台中公益總店", "address": "408台灣臺中市南屯區溝墘里公益路二段230號一樓", "lat": 24.1510856, "lng": 120.645222, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x6dfc53b822cbe1b1", "date": "2025-11-29T11:21:49.600496Z", "source": "review", "rating": 5, "note": "超級寵物友善！\n服務人員都很親切！\n食材新鮮，烤肉都超級好吃！", "mealType": "晚餐", "price": "$1,000-1,200", "visited": true, "id": 91, "area": "台中市南屯區"}, {"name": "關渡市場鮮炸雞", "address": "112台灣臺北市北投區關渡里知行路235巷7號", "lat": 25.120344, "lng": 121.4666583, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xbf64cafda54a1796", "date": "2026-01-01T08:39:20.525029Z", "source": "review", "rating": 5, "note": "炸雞塊雞汁多，皮非常好吃！口感酥脆香甜", "mealType": "其他", "price": "$1-200", "visited": true, "id": 90, "area": "台北市北投區"}, {"name": "嗨鍋", "address": "112台灣臺北市北投區中央里大興街62號1樓", "lat": 25.1304792, "lng": 121.5006869, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x3c3e0077bcdd72dd", "date": "2026-01-22T12:45:08.190165Z", "source": "review", "rating": 5, "note": "酒香藥膳很好喝！", "mealType": "晚餐", "price": "$200-400", "visited": true, "id": 89, "area": "台北市北投區"}, {"name": "PokeBee波克比夏威夷輕食", "address": "251台灣新北市淡水區水碓里大忠街75-1號", "lat": 25.1774015, "lng": 121.4458448, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0x776c2d68cd9e5dbe", "date": "2026-01-31T06:38:16.941194Z", "source": "review", "rating": 5, "note": "辣美式醬超級好吃😋\n蕃茄雖然不是丁狀，但我更喜歡這樣的大小，很新鮮、很鮮甜！\n竟然還有節瓜，實在是太好吃了！", "mealType": "午餐", "price": "$1-200", "visited": true, "id": 88, "area": "新北市淡水區"}, {"name": "醇鵝肉", "address": "No, No. 273號內湖路一段內湖區臺北市台灣 114", "lat": 25.0824986, "lng": 121.5657324, "url": "https://www.google.com/maps/place//data=!4m2!3m1!1s0x0:0xd6b2905db5b87f71", "date": "2026-03-27T05:28:12.858605Z", "source": "review", "rating": 5, "note": "", "price": "$1-200", "visited": true, "id": 87, "area": "台北市"}, {"name": "歐舍咖啡 台中門市", "address": "403台灣臺中市西區安龍里五權路14號", "lat": 24.143283, "lng": 120.6693162, "url": "http://maps.google.com/?cid=15790967642038990749", "date": "2015-08-27T12:15:11Z", "source": "saved", "visited": false, "id": 86, "area": "台中市西區"}, {"name": "筆堆咖啡", "address": "403台灣臺中市西區中興里中興街122巷16號", "lat": 24.1482126, "lng": 120.6640592, "url": "http://maps.google.com/?cid=1221932283168534479", "date": "2015-08-27T12:19:16Z", "source": "saved", "visited": false, "id": 85, "area": "台中市西區"}, {"name": "藍洞義式廚房", "address": "403台灣臺中市西區中興里向上北路127號", "lat": 24.1476844, "lng": 120.663478, "url": "http://maps.google.com/?cid=303069372607293972", "date": "2015-08-27T12:19:49Z", "source": "saved", "visited": false, "id": 84, "area": "台中市西區"}, {"name": "老樣咖啡館", "address": "403台灣臺中市西區後龍里大和路17號號", "lat": 24.1501442, "lng": 120.6691357, "url": "http://maps.google.com/?cid=17513403576713327928", "date": "2015-08-27T12:21:02Z", "source": "saved", "visited": false, "id": 83, "area": "台中市西區"}, {"name": "小鍋", "address": "400台灣臺中市中區中華里民權路212號", "lat": 24.143068, "lng": 120.674173, "url": "http://maps.google.com/?cid=1376751379594724208", "date": "2016-01-29T07:17:21Z", "source": "saved", "visited": false, "id": 82, "area": "台中市中區"}, {"name": "阿裕壽司", "address": "404台灣臺中市北區健行里西屯路一段361號", "lat": 24.1610072, "lng": 120.6647793, "url": "http://maps.google.com/?cid=15359449380217531826", "date": "2016-01-29T12:00:25Z", "source": "saved", "visited": false, "id": 81, "area": "台中市北區"}, {"name": "台中正老牌香菇肉羹", "address": "400台灣臺中市中區綠川里雙十路一段23號", "lat": 24.1408844, "lng": 120.6855319, "url": "http://maps.google.com/?cid=11069329112161192417", "date": "2016-01-30T05:24:30Z", "source": "saved", "visited": false, "id": 80, "area": "台中市中區"}, {"name": "上泓園川燙牛肉麵", "address": "403台灣臺中市西區忠明里博館路155號", "lat": 24.1572854, "lng": 120.6641021, "url": "http://maps.google.com/?cid=17518453453824586585", "date": "2016-01-30T07:17:20Z", "source": "saved", "visited": false, "id": 79, "area": "台中市西區"}, {"name": "高林鐵板燒-健行店", "address": "403台灣臺中市西區忠明里健行路1006號", "lat": 24.157378, "lng": 120.6634332, "url": "http://maps.google.com/?cid=6364186528106831251", "date": "2016-01-30T10:19:11Z", "source": "saved", "visited": false, "id": 78, "area": "台中市西區"}, {"name": "偈亭泡菜鍋 一中店", "address": "404台灣臺中市北區新北里三民路三段106巷14號", "lat": 24.1493145, "lng": 120.6845387, "url": "http://maps.google.com/?cid=6123544161694488548", "date": "2016-01-30T13:22:54Z", "source": "saved", "visited": false, "id": 77, "area": "台中市北區"}, {"name": "貴壽司", "address": "408台灣臺中市南屯區豐樂里文心南三路682號", "lat": 24.1334956, "lng": 120.6434073, "url": "http://maps.google.com/?cid=6085238693415438968", "date": "2016-01-30T13:26:25Z", "source": "saved", "visited": false, "id": 76, "area": "台中市南屯區"}, {"name": "9食圓異國石鍋料理", "address": "403台灣臺中市西區公民里民生路157號", "lat": 24.1428097, "lng": 120.6709883, "url": "http://maps.google.com/?cid=11615945581601768818", "date": "2016-01-30T13:29:38Z", "source": "saved", "visited": false, "id": 75, "area": "台中市西區"}, {"name": "一中街夜市", "address": "404台灣臺中市北區一中街", "lat": 24.1505158, "lng": 120.6855337, "url": "http://maps.google.com/?cid=397852651338780278", "date": "2016-01-30T13:33:51Z", "source": "saved", "visited": false, "id": 74, "area": "台中市北區"}, {"name": "黃鶴洞Halo銅盤烤肉，部隊火鍋（勤美綠園道店）", "address": "403台灣臺中市西區中興里公正路99號", "lat": 24.1489246, "lng": 120.6631676, "url": "http://maps.google.com/?cid=18120772555888569990", "date": "2016-01-31T08:33:06Z", "source": "saved", "visited": false, "id": 73, "area": "台中市西區"}, {"name": "吳留手串燒居酒屋 勤美店", "address": "40358台灣臺中市西區中興里中興街111號", "lat": 24.148539, "lng": 120.6629826, "url": "http://maps.google.com/?cid=8951883216750495939", "date": "2016-01-31T08:34:34Z", "source": "saved", "visited": false, "id": 72, "area": "台中市西區"}, {"name": "IL Volo pizza義波羅窯烤披薩。6/29-7/8休息10天", "address": "403台灣臺中市西區中興里中興街106號", "lat": 24.1477101, "lng": 120.6631605, "url": "http://maps.google.com/?cid=4131811881995393827", "date": "2016-01-31T08:37:11Z", "source": "saved", "visited": false, "id": 71, "area": "台中市西區"}, {"name": "煮創意料理", "address": "404台灣臺中市北區明德里太原路一段452-5號", "lat": 24.1647816, "lng": 120.6679938, "url": "http://maps.google.com/?cid=17458855615513227564", "date": "2016-01-31T09:30:58Z", "source": "saved", "visited": false, "id": 70, "area": "台中市北區"}, {"name": "億哥牛肉湯", "address": "701台灣臺南市東區東聖里裕農路574號", "lat": 22.9884516, "lng": 120.2341891, "url": "http://maps.google.com/?cid=8947239671554493702", "date": "2016-02-03T03:16:36Z", "source": "saved", "visited": false, "id": 69, "area": "台南市東區"}, {"name": "裕農燒肉飯", "address": "701台灣臺南市東區東聖里裕農路588號", "lat": 22.9884863, "lng": 120.2347374, "url": "http://maps.google.com/?cid=14863168616456698844", "date": "2016-02-03T03:17:23Z", "source": "saved", "visited": false, "id": 68, "area": "台南市東區"}, {"name": "台南牛小妹溫體牛肉火鍋", "address": "710台灣臺南市永康區北興里永大路二段918號", "lat": 23.0158746, "lng": 120.2634827, "url": "http://maps.google.com/?cid=11355141553719900638", "date": "2016-02-03T06:16:40Z", "source": "saved", "visited": false, "id": 67, "area": "台南市永康區"}, {"name": "恩典景觀咖啡廳(週六~周日營業平日請來電預約)", "address": "421台灣臺中市后里區永豐里月眉北路486號", "lat": 24.3325163, "lng": 120.7016641, "url": "http://maps.google.com/?cid=12624223835787429939", "date": "2016-02-05T05:48:27Z", "source": "saved", "visited": false, "id": 66, "area": "台中市后里區"}, {"name": "添好運點心專門店 (深水埗)", "address": "G/F & M/F, Ka Wui Building, 9-11 Fuk Wing St, Sham Shui Po, 香港", "lat": 22.3290608, "lng": 114.1663164, "url": "http://maps.google.com/?cid=4540539753907016659", "date": "2016-07-14T12:06:55Z", "source": "saved", "visited": false, "id": 65, "area": "其他"}, {"name": "金鳳茶餐廳", "address": "香港灣仔春園街41號", "lat": 22.275502, "lng": 114.1725736, "url": "http://maps.google.com/?cid=5466452447978873161", "date": "2016-07-14T12:19:54Z", "source": "saved", "visited": false, "id": 64, "area": "其他"}, {"name": "添好運點心專門店", "address": "Shop G72A-C, G/F, Olympian City 2, 18 Hoi Ting Rd, Tai Kok Tsui, 香港", "lat": 22.3170282, "lng": 114.1627279, "url": "http://maps.google.com/?cid=172755104628135448", "date": "2016-07-14T12:21:32Z", "source": "saved", "visited": false, "id": 63, "area": "其他"}, {"name": "一樂燒鵝", "address": "香港中環士丹利街34-38號G/F", "lat": 22.2824956, "lng": 114.1552995, "url": "http://maps.google.com/?cid=11351122827533490124", "date": "2016-07-14T12:32:39Z", "source": "saved", "visited": false, "id": 62, "area": "其他"}, {"name": "維記咖啡粉麵（深水埗福榮街店）", "address": "香港深水埗福榮街62及66號", "lat": 22.3316222, "lng": 114.1633944, "url": "http://maps.google.com/?cid=9155801518266981251", "date": "2016-07-14T14:19:51Z", "source": "saved", "visited": false, "id": 61, "area": "其他"}, {"name": "牧羊少年咖啡館", "address": "香港塘尾白楊街27-29號嘉安大樓", "lat": 22.3279379, "lng": 114.1675998, "url": "http://maps.google.com/?cid=13132246062278208663", "date": "2016-07-14T14:24:58Z", "source": "saved", "visited": false, "id": 60, "area": "其他"}, {"name": "澳門茶餐廳", "address": "香港尖沙咀樂道", "lat": 22.2976537, "lng": 114.1716502, "url": "http://maps.google.com/?cid=2713107653335183006", "date": "2016-07-14T15:01:27Z", "source": "saved", "visited": false, "id": 59, "area": "其他"}, {"name": "大吉居酒屋", "address": "香港尖沙咀漆咸道南11-15號1樓", "lat": 22.2969662, "lng": 114.1751344, "url": "http://maps.google.com/?cid=12917662938456455290", "date": "2016-07-15T13:19:48Z", "source": "saved", "visited": false, "id": 58, "area": "其他"}, {"name": "Jenny Bakery Tsim Sha Tsui", "address": "號舖, 彌敦道62號，美麗都大廈1樓42, 62號 Nathan Rd, Tsim Sha Tsui, 香港", "lat": 22.2972567, "lng": 114.1726391, "url": "http://maps.google.com/?cid=3415375282988305722", "date": "2016-07-15T13:48:38Z", "source": "saved", "visited": false, "id": 57, "area": "其他"}, {"name": "甲上口水煎包煎餃", "address": "542台灣南投縣草屯鎮中山里中山街191號", "lat": 23.9781743, "lng": 120.6827784, "url": "http://maps.google.com/?cid=18355826553190494556", "date": "2016-08-05T02:56:37Z", "source": "saved", "visited": false, "id": 56, "area": "南投縣草屯鎮"}, {"name": "冷凍豆花搖搖冰", "address": "542台灣南投縣草屯鎮和平里和興街43號", "lat": 23.9777186, "lng": 120.6849277, "url": "http://maps.google.com/?cid=17334002007875140251", "date": "2016-08-05T02:57:37Z", "source": "saved", "visited": false, "id": 55, "area": "南投縣草屯鎮"}, {"name": "久味大姐手工麻糬中山店(草屯麻糬・南投伴手禮首選)", "address": "542台灣南投縣草屯鎮中山里中山街201號", "lat": 23.9783872, "lng": 120.6828139, "url": "http://maps.google.com/?cid=7036296456476210604", "date": "2016-08-05T03:06:31Z", "source": "saved", "visited": false, "id": 54, "area": "南投縣草屯鎮"}, {"name": "銀河鐵道望景餐廳", "address": "511台灣彰化縣社頭鄉協和村後路巷27-1號", "lat": 23.9329987, "lng": 120.6159883, "url": "http://maps.google.com/?cid=17036584743426675158", "date": "2016-08-30T10:32:17Z", "source": "saved", "visited": false, "id": 53, "area": "彰化縣社頭鄉"}, {"name": "山芙蓉咖啡藝廊", "address": "353台灣苗栗縣南庄鄉蓬萊村蓬萊村9鄰8號", "lat": 24.5341478, "lng": 120.9630214, "url": "http://maps.google.com/?cid=18004567080079806418", "date": "2017-01-28T02:59:12Z", "source": "saved", "visited": false, "id": 52, "area": "苗栗縣南庄鄉"}, {"name": "阿ㄆㄧㄚˋ滷味", "address": "404台灣臺中市北區新北里三民路三段114號", "lat": 24.1498911, "lng": 120.6843545, "url": "http://maps.google.com/?cid=13671095545672127028", "date": "2017-01-29T11:13:39Z", "source": "saved", "visited": false, "id": 51, "area": "台中市北區"}, {"name": "一心古早味蛋餅", "address": "404台灣臺中市北區金華里錦中街口號", "lat": 24.155512, "lng": 120.6876737, "url": "http://maps.google.com/?cid=18173469169368167629", "date": "2017-02-01T15:50:15Z", "source": "saved", "visited": false, "id": 50, "area": "台中市北區"}, {"name": "肉蛋中西式早餐店 創始店", "address": "404台灣臺中市北區健行里健行路748號", "lat": 24.1593519, "lng": 120.670178, "url": "http://maps.google.com/?cid=12895655802606452021", "date": "2017-02-01T15:52:49Z", "source": "saved", "visited": false, "id": 49, "area": "台中市北區"}, {"name": "天空之城景觀餐廳", "address": "364台灣苗栗縣大湖鄉新開村33號新開村十份 33號", "lat": 24.3494064, "lng": 120.7785998, "url": "http://maps.google.com/?cid=5355008298796795460", "date": "2017-02-01T16:05:21Z", "source": "saved", "visited": false, "id": 48, "area": "苗栗縣大湖鄉"}, {"name": "心心麵包店", "address": "232台灣新北市坪林區坪林里水柳腳29號", "lat": 24.9357515, "lng": 121.7106791, "url": "http://maps.google.com/?cid=3556551476926291167", "date": "2017-02-10T06:51:58Z", "source": "saved", "visited": false, "id": 47, "area": "新北市坪林區"}, {"name": "東木河茶莊", "address": "23241台灣新北市坪林區坪林里北宜路八段206號", "lat": 24.9347305, "lng": 121.7085395, "url": "http://maps.google.com/?cid=3696001982838358844", "date": "2017-02-10T07:04:22Z", "source": "saved", "visited": false, "id": 46, "area": "新北市坪林區"}, {"name": "一會 咖啡", "address": "232台灣新北市坪林區金瓜寮路9 號", "lat": 24.917202, "lng": 121.6807663, "url": "http://maps.google.com/?cid=8738445782468091118", "date": "2017-02-11T08:38:03Z", "source": "saved", "visited": false, "id": 45, "area": "新北市坪林區"}, {"name": "白沙屯美食-阿珠滷肉飯", "address": "357台灣苗栗縣通霄鎮白東里白東里5鄰30號", "lat": 24.5710356, "lng": 120.7100479, "url": "http://maps.google.com/?cid=9103995102190984336", "date": "2017-04-01T04:40:07Z", "source": "saved", "visited": false, "id": 44, "area": "苗栗縣通霄鎮"}, {"name": "老杜牛肉麵", "address": "357台灣苗栗縣通霄鎮白東里37-1 號", "lat": 24.5705469, "lng": 120.710149, "url": "http://maps.google.com/?cid=12821523465163145399", "date": "2017-04-01T04:40:47Z", "source": "saved", "visited": false, "id": 43, "area": "苗栗縣通霄鎮"}, {"name": "永富鮮魚湯（達仁）", "address": "966台灣臺東縣大武鄉南興村達興路43號", "lat": 22.3030491, "lng": 120.8887055, "url": "http://maps.google.com/?cid=17825437494042566449", "date": "2017-04-05T06:27:04Z", "source": "saved", "visited": false, "id": 42, "area": "台東縣大武鄉"}, {"name": "慶修院馬告香腸-6/25公休。提早賣完提早打烊", "address": "973台灣花蓮縣吉安鄉吉安村中興路", "lat": 23.9740424, "lng": 121.5641894, "url": "http://maps.google.com/?cid=17601488212383099739", "date": "2017-04-07T08:54:46Z", "source": "saved", "visited": false, "id": 41, "area": "花蓮縣吉安鄉"}, {"name": "花蓮公正包子店", "address": "970台灣花蓮縣花蓮市主睦里仁愛街46號", "lat": 23.9734447, "lng": 121.6059897, "url": "http://maps.google.com/?cid=10419141611252273965", "date": "2017-04-07T10:00:26Z", "source": "saved", "visited": false, "id": 40, "area": "花蓮縣花蓮市"}, {"name": "豐春冰菓店", "address": "974台灣花蓮縣壽豐鄉壽豐村壽豐路一段79號", "lat": 23.8697711, "lng": 121.5103424, "url": "http://maps.google.com/?cid=4796515342731958778", "date": "2017-04-07T10:11:44Z", "source": "saved", "visited": false, "id": 39, "area": "花蓮縣壽豐鄉"}, {"name": "壽豐夜市", "address": "974台灣花蓮縣壽豐鄉壽豐村中山路五段87號", "lat": 23.8694574, "lng": 121.5085577, "url": "http://maps.google.com/?cid=7613129248831478452", "date": "2017-04-07T10:11:49Z", "source": "saved", "visited": false, "id": 38, "area": "花蓮縣壽豐鄉"}, {"name": "Oops驚奇咖啡", "address": "970台灣花蓮縣花蓮市軒轅路15號", "lat": 23.9750781, "lng": 121.6115933, "url": "http://maps.google.com/?cid=2873615452062538125", "date": "2017-04-07T12:31:03Z", "source": "saved", "visited": false, "id": 37, "area": "花蓮縣花蓮市"}, {"name": "東大門夜市", "address": "970台灣花蓮縣花蓮市民主里中山路50號", "lat": 23.9735851, "lng": 121.6108901, "url": "http://maps.google.com/?cid=13725167229950632165", "date": "2017-04-07T12:32:13Z", "source": "saved", "visited": false, "id": 36, "area": "花蓮縣花蓮市"}, {"name": "陳記狀元粥舖", "address": "970台灣花蓮縣花蓮市民族里軒轅路10號", "lat": 23.9748153, "lng": 121.6118549, "url": "http://maps.google.com/?cid=6812778012139604420", "date": "2017-04-07T13:58:18Z", "source": "saved", "visited": false, "id": 35, "area": "花蓮縣花蓮市"}, {"name": "台灣牛肉麵", "address": "971台灣花蓮縣新城鄉新城村新興路83號", "lat": 24.1321019, "lng": 121.6421627, "url": "http://maps.google.com/?cid=3765029907730513170", "date": "2017-04-08T02:48:33Z", "source": "saved", "visited": false, "id": 34, "area": "花蓮縣新城鄉"}, {"name": "佳興冰菓店", "address": "971台灣花蓮縣新城鄉新城村博愛路22號", "lat": 24.1264499, "lng": 121.6518013, "url": "http://maps.google.com/?cid=5641449034182779845", "date": "2017-04-08T02:49:10Z", "source": "saved", "visited": false, "id": 33, "area": "花蓮縣新城鄉"}, {"name": "曾記麻糬 太魯閣門市", "address": "971台灣花蓮縣新城鄉新城村新興路66號", "lat": 24.1314279, "lng": 121.6445281, "url": "http://maps.google.com/?cid=2001693043755857867", "date": "2017-04-08T02:49:36Z", "source": "saved", "visited": false, "id": 32, "area": "花蓮縣新城鄉"}, {"name": "正道早餐", "address": "807台灣高雄市三民區水源路251-2號", "lat": 22.6370435, "lng": 120.3381648, "url": "http://maps.google.com/?cid=15146499654375546100", "date": "2018-01-31T21:31:00Z", "source": "saved", "visited": false, "id": 31, "area": "其他"}, {"name": "上海生煎湯包", "address": "807台灣高雄市三民區德智里熱河一街208號", "lat": 22.6437041, "lng": 120.3079114, "url": "http://maps.google.com/?cid=5878650382046412467", "date": "2018-02-01T11:07:17Z", "source": "saved", "visited": false, "id": 30, "area": "其他"}, {"name": "小雅茶飲-芋頭西米露", "address": "80758台灣高雄市三民區熱河一街204號", "lat": 22.6437053, "lng": 120.3080187, "url": "http://maps.google.com/?cid=3925251731365127126", "date": "2018-02-01T11:07:32Z", "source": "saved", "visited": false, "id": 29, "area": "其他"}, {"name": "阿婆彈珠汽水綜合茶", "address": "803台灣高雄市鹽埕區瀨南里大勇路131號", "lat": 22.6259963, "lng": 120.2848639, "url": "http://maps.google.com/?cid=8709601545871250052", "date": "2018-02-02T09:05:10Z", "source": "saved", "visited": false, "id": 28, "area": "其他"}, {"name": "木侖花生糖", "address": "830台灣高雄市鳳山區南和里五甲二路559號", "lat": 22.5956287, "lng": 120.3315777, "url": "http://maps.google.com/?cid=11247572275318623417", "date": "2018-02-02T09:24:59Z", "source": "saved", "visited": false, "id": 27, "area": "其他"}, {"name": "吳哥夜市", "address": "9V42+4QX, Angkor Night Market Street, Steung Thmei, Krong Siem Reap, 柬埔寨", "lat": 13.355357, "lng": 103.8519752, "url": "http://maps.google.com/?cid=8070925409470284748", "date": "2018-02-11T14:24:41Z", "source": "saved", "visited": false, "id": 26, "area": "其他"}, {"name": "Pho Ha Noi", "address": "National Route 6, Airport Road, Krong Siem Reap, 柬埔寨", "lat": 13.3679076, "lng": 103.8489894, "url": "http://maps.google.com/?cid=8905146841733587649", "date": "2018-02-11T14:25:06Z", "source": "saved", "visited": false, "id": 25, "area": "其他"}, {"name": "Ly Ly Restaurant", "address": "# 503, Sivutha Street Mondul 2 Village, 17252柬埔寨", "lat": 13.3616636, "lng": 103.8554965, "url": "http://maps.google.com/?cid=10707557678630449506", "date": "2018-02-14T10:02:54Z", "source": "saved", "visited": false, "id": 24, "area": "其他"}, {"name": "Pub Street Mart", "address": "9V33+XM8, Street 11, Krong Siem Reap, 柬埔寨", "lat": 13.3549192, "lng": 103.8541888, "url": "http://maps.google.com/?cid=14017924846334758479", "date": "2018-02-15T04:58:32Z", "source": "saved", "visited": false, "id": 23, "area": "其他"}, {"name": "阿娥豆漿豆花", "address": "600台灣嘉義市東區過溝里延平街233號", "lat": 23.4767316, "lng": 120.450726, "url": "http://maps.google.com/?cid=17252654850142056622", "date": "2018-04-03T11:23:05Z", "source": "saved", "visited": false, "id": 22, "area": "嘉義市東區"}, {"name": "那個那個咖啡", "address": "600台灣嘉義市東區中央里光華路162號", "lat": 23.4795097, "lng": 120.4505857, "url": "http://maps.google.com/?cid=11508195866834395193", "date": "2018-04-03T11:40:51Z", "source": "saved", "visited": false, "id": 21, "area": "嘉義市東區"}, {"name": "嘉義市中山路老店切仔麵、魯熟肉(無店名)", "address": "600台灣嘉義市東區中央里中山路192號", "lat": 23.4811451, "lng": 120.4520869, "url": "http://maps.google.com/?cid=13477842828876522790", "date": "2018-04-03T12:55:03Z", "source": "saved", "visited": false, "id": 20, "area": "嘉義市東區"}, {"name": "林聰明沙鍋魚頭", "address": "600台灣嘉義市東區中央里中正路361號", "lat": 23.4787729, "lng": 120.4502528, "url": "http://maps.google.com/?cid=6714134112039336413", "date": "2018-04-03T13:49:38Z", "source": "saved", "visited": false, "id": 19, "area": "嘉義市東區"}, {"name": "Bless cafe", "address": "600台灣嘉義市東區東川里啟明路124號", "lat": 23.4786003, "lng": 120.4629839, "url": "http://maps.google.com/?cid=1993221491862022657", "date": "2018-04-03T13:54:44Z", "source": "saved", "visited": false, "id": 18, "area": "嘉義市東區"}, {"name": "窩柢咖啡", "address": "407台灣臺中市西屯區杏林路27號", "lat": 24.1677068, "lng": 120.6420647, "url": "http://maps.google.com/?cid=13050630662052150532", "date": "2018-07-14T10:15:40Z", "source": "saved", "visited": false, "id": 17, "area": "台中市西屯區"}, {"name": "老芋仔芋圓", "address": "406台灣臺中市北屯區和平里東山路一段408-2號", "lat": 24.1773053, "lng": 120.7351793, "url": "http://maps.google.com/?cid=13518122782483311793", "date": "2018-07-15T06:41:43Z", "source": "saved", "visited": false, "id": 16, "area": "台中市北屯區"}, {"name": "張生煎", "address": "中國四川省成都市武侯区人民南路南延线休闲餐饮一条街人民南路四段3号 邮政编码: 610041", "lat": 30.631307, "lng": 104.066842, "url": "http://maps.google.com/?cid=18198154873148999543", "date": "2018-11-06T16:27:25Z", "source": "saved", "visited": false, "id": 15, "area": "其他"}, {"name": "張生煎", "address": "中國四川省成都市锦江区盐市口商圈红星路三段 邮政编码: 610016", "lat": 30.6543365, "lng": 104.0794845, "url": "http://maps.google.com/?cid=15764118693466338588", "date": "2018-11-06T16:28:07Z", "source": "saved", "visited": false, "id": 14, "area": "其他"}, {"name": "如軒海鮮粥", "address": "中國四川省成都市武侯区美领事馆美食区科华北路30号 邮政编码: 610041", "lat": 30.630399, "lng": 104.076098, "url": "http://maps.google.com/?cid=14901463403125959928", "date": "2018-11-06T16:29:03Z", "source": "saved", "visited": false, "id": 13, "area": "其他"}, {"name": "TGB很牛岩燒牛排 埔里店", "address": "545台灣南投縣埔里鎮北安里中山路二段41號", "lat": 23.9706769, "lng": 120.9757475, "url": "http://maps.google.com/?cid=9231840498169189095", "date": "2019-06-08T10:04:52Z", "source": "saved", "visited": false, "id": 12, "area": "南投縣埔里鎮"}, {"name": "蘇媽媽湯圓", "address": "545台灣南投縣埔里鎮薰化里中山路三段118號", "lat": 23.9667097, "lng": 120.9628264, "url": "http://maps.google.com/?cid=7457525058631469138", "date": "2019-06-08T10:09:09Z", "source": "saved", "visited": false, "id": 11, "area": "南投縣埔里鎮"}, {"name": "同安街麵線羹", "address": "100台灣臺北市中正區河堤里同安街85-1號", "lat": 25.0229909, "lng": 121.5209924, "url": "http://maps.google.com/?cid=17682844454202599879", "date": "2024-09-08T04:00:14Z", "source": "saved", "visited": false, "id": 10, "area": "台北市中正區"}, {"name": "海口組食堂", "address": "224台灣新北市瑞芳區瑞濱里瑞濱路32-9號", "lat": 25.121122, "lng": 121.8225608, "url": "http://maps.google.com/?cid=13325656118258031159", "date": "2024-09-16T10:16:53Z", "source": "saved", "visited": false, "id": 9, "area": "新北市瑞芳區"}, {"name": "黑豬肉水餃", "address": "242台灣新北市新莊區信義里福壽街114號", "lat": 25.0507484, "lng": 121.4580034, "url": "http://maps.google.com/?cid=18353686419333558946", "date": "2024-10-25T13:52:52Z", "source": "saved", "visited": false, "id": 8, "area": "新北市新莊區"}, {"name": "鯨鍋Jing Seafood Hotpot", "address": "228台灣新北市貢寮區龍門里復興街8號之一", "lat": 25.026611, "lng": 121.9270881, "url": "http://maps.google.com/?cid=6418064413822917623", "date": "2025-01-30T11:21:44Z", "source": "saved", "visited": false, "id": 7, "area": "新北市貢寮區"}, {"name": "阿亮小吃 (必吃宵夜美食、平價麵館 滷味小吃、人氣銅板料理)", "address": "112台灣臺北市北投區福興里承德路七段98號", "lat": 25.11195, "lng": 121.510303, "url": "http://maps.google.com/?cid=8039758663306787253", "date": "2025-03-18T18:08:28Z", "source": "saved", "visited": false, "id": 6, "area": "台北市北投區"}, {"name": "幸福王國庭園餐廳", "address": "252台灣新北市三芝區埔坪里觀海街2號", "lat": 25.2582993, "lng": 121.5100543, "url": "http://maps.google.com/?cid=14921342699427275763", "date": "2025-05-04T01:51:29Z", "source": "saved", "visited": false, "id": 5, "area": "新北市三芝區"}, {"name": "老家餡餅 北投店", "address": "112台灣臺北市北投區中央里新市街47號", "lat": 25.132403, "lng": 121.50214, "url": "http://maps.google.com/?cid=9239286543964647648", "date": "2025-06-15T00:00:54Z", "source": "saved", "visited": false, "id": 4, "area": "台北市北投區"}, {"name": "炳煌自助餐", "address": "112台灣臺北市北投區振華里石牌路二段90巷14號", "lat": 25.1170155, "lng": 121.5169574, "url": "http://maps.google.com/?cid=15226233699316668761", "date": "2025-07-21T10:30:16Z", "source": "saved", "visited": false, "id": 3, "area": "台北市北投區"}, {"name": "伊府將鍋燒 (臺北中山店) 鍋燒 • 小火鍋", "address": "103台灣臺北市大同區南京西路88號", "lat": 25.0530265, "lng": 121.5180697, "url": "http://maps.google.com/?cid=12078529587835975876", "date": "2025-07-29T05:39:22Z", "source": "saved", "visited": false, "id": 2, "area": "台北市大同區"}, {"name": "私廚房 Snuggles Kitchen（蔬食）", "address": "111台灣臺北市士林區天福里天母東路8巷21-6號", "lat": 25.1173807, "lng": 121.5324828, "url": "http://maps.google.com/?cid=727825934557341395", "date": "2025-07-30T03:27:04Z", "source": "saved", "visited": false, "id": 1, "area": "台北市士林區"}, {"name": "夫妻檔客家料理‧私房", "address": "111台灣臺北市士林區蘭雅里中山北路六段204號2樓", "lat": 25.1082379, "lng": 121.5253685, "url": "http://maps.google.com/?cid=6057342229057365520", "date": "2025-08-03T14:34:50Z", "source": "saved", "visited": false, "id": 0, "area": "台北市士林區"}]</script>
+<script type="application/json" id="tw-topo">{"type": "Topology", "transform": {"scale": [0.00015549231993359347, 0.00015750987457023634], "translate": [118.21707123169105, 21.89671606253262]}, "objects": {"layer1": {"type": "GeometryCollection", "geometries": [{"type": "MultiPolygon", "arcs": [[[0]], [[1, 2, 3, 4]], [[5]]], "properties": {"name": "台東縣"}}, {"type": "MultiPolygon", "arcs": [[[6]], [[7, 8, 9, 10, 11, 12]]], "properties": {"name": "宜蘭縣"}}, {"type": "Polygon", "arcs": [[13]], "properties": {"name": "台北市"}}, {"type": "MultiPolygon", "arcs": [[[14]], [[15]], [[16]], [[17, 18, 19, 20]]], "properties": {"name": "雲林縣"}}, {"type": "Polygon", "arcs": [[21, -11, 22, 23]], "properties": {"name": "桃園市"}}, {"type": "MultiPolygon", "arcs": [[[24]], [[25, -3, 26]]], "properties": {"name": "屏東縣"}}, {"type": "Polygon", "arcs": [[27, 28, -9, 29, 30, 31, 32]], "properties": {"name": "台中市"}}, {"type": "Polygon", "arcs": [[33, 34, 35]], "properties": {"name": "台南市"}}, {"type": "Polygon", "arcs": [[36, 37]], "properties": {"name": "基隆市"}}, {"type": "MultiPolygon", "arcs": [[[38, 39, 40]], [[41]], [[44]], [[45]]], "properties": {"name": "連江縣"}}, {"type": "Polygon", "arcs": [[46, 47, 48, -21, 49, -31]], "properties": {"name": "南投縣"}}, {"type": "MultiPolygon", "arcs": [[[50]], [[51]], [[52]], [[53]], [[54]], [[55]], [[56]]], "properties": {"name": "澎湖縣"}}, {"type": "Polygon", "arcs": [[-28, 57, 58, 59]], "properties": {"name": "苗栗縣"}}, {"type": "Polygon", "arcs": [[60]], "properties": {"name": "嘉義市"}}, {"type": "Polygon", "arcs": [[-23, -10, -29, -60, 61, 62]], "properties": {"name": "新竹縣"}}, {"type": "Polygon", "arcs": [[-22, 63, -37, 64, -12], [-14]], "properties": {"name": "新北市"}}, {"type": "Polygon", "arcs": [[65, -47, -30, -8, 66, -5]], "properties": {"name": "花蓮縣"}}, {"type": "Polygon", "arcs": [[67, -34, 68, -48, -66, -4, -26]], "properties": {"name": "高雄市"}}, {"type": "Polygon", "arcs": [[-20, 69, -32, -50]], "properties": {"name": "彰化縣"}}, {"type": "Polygon", "arcs": [[-36, 70, -18, -49, -69], [-61]], "properties": {"name": "嘉義縣"}}, {"type": "MultiPolygon", "arcs": [[[71]], [[72]]], "properties": {"name": "金門縣"}}, {"type": "Polygon", "arcs": [[-62, -59, 73]], "properties": {"name": "新竹市"}}], "bbox": [118.21707123169105, 21.89671606253262, 122.00657456079266, 26.27675065458175]}}, "arcs": [[[21116, 4761], [35, -84], [-71, 0], [-18, 40], [-127, 47], [14, 80], [-65, 67], [-2, 53], [191, -15], [100, 17], [6, -90], [-63, -115]], [[21086, 9764], [-114, -246], [-39, -151], [5, -58], [-29, -95], [-3, -104], [-33, -110], [-92, -22], [-65, -76], [-67, -128], [-4, -73], [-33, -31], [-52, -193], [38, -34], [-64, -83], [-80, -36], [2, -138], [61, -129], [-52, -117], [12, -108], [64, -52], [-67, -53], [-28, 21], [-63, -88], [-72, -42], [-59, -3], [-114, -178], [-16, -109], [-39, -81], [-22, -116], [-56, -33], [-70, -206], [-110, -143], [-81, -45], [-124, -265], [-45, -38], [-87, -149], [-45, -10], [-42, -94], [-46, 18], [-126, -23], [-110, -98], [-15, -125], [31, -24], [56, -188], [-116, -54], [-21, -113], [-44, -89], [-104, -51], [-185, -175], [-175, -94], [-150, -60], [-138, -117], [-137, -64], [-80, -114], [-63, -188], [-21, -194], [-156, -128], [-65, -131], [-101, -279], [-82, -301], [-156, -371], [-47, -85], [-39, -164], [-40, -43], [-49, -114], [-16, -104], [-4, -261], [28, -194]], [[17230, 2220], [-101, -75], [-92, -30], [-48, 70], [-124, 17], [-155, 125], [-101, -39], [-11, 123], [56, 5], [-7, 43], [-79, 11], [-22, 48], [-78, 29], [3, 68], [96, 25], [22, 46], [-24, 95], [-50, 68], [-114, 14], [-28, 73], [-65, 7], [-60, 45], [33, 83], [50, 52], [-27, 25], [35, 78], [45, 25], [98, 3], [62, 53], [-93, 164], [9, 38], [-118, 58], [-43, 0], [19, 89], [-23, 42], [84, 76], [-7, 62], [-59, 64], [-23, 146], [-68, 111], [14, 109], [46, 22], [-19, 111], [57, 78], [-11, 61], [55, 119], [159, 208], [33, 100], [-30, 90], [137, -24], [79, 42], [94, 5], [88, 130], [226, 2], [71, 129], [-10, 183], [68, 58], [-4, 155], [-77, 74], [-146, 33], [-44, 62], [19, 104]], [[17027, 6008], [28, 96], [-63, 32], [37, 59], [-33, 36], [-115, 19], [-86, 146], [30, 52], [-73, 145], [17, 105], [-23, 58], [59, 58], [14, 64], [60, 30], [2, 40], [64, 52], [-6, 36], [62, 19], [3, 138], [119, 32], [11, 59], [-78, 100], [106, 185], [24, 134], [-28, 63], [19, 106], [-15, 50], [-59, 43], [119, 60], [22, 98], [70, 23], [21, 44], [-38, 62], [32, 81], [1, 121], [26, 62], [67, 41], [76, 4], [212, 229], [97, -6], [158, 79], [114, 28]], [[18080, 8891], [68, 22], [112, -66], [37, -71], [2, -83], [110, -211], [82, 7], [105, -66], [133, -1], [68, -138], [104, -9], [36, 39], [92, 24], [97, -49], [46, -87], [7, -85], [85, -130], [-3, -67], [121, -31], [49, -67], [69, 18], [115, -110], [-18, -66], [52, -38], [78, 55], [118, 28], [85, -2], [42, 60], [-14, 112], [44, 92], [-63, 77], [41, 89], [70, -3], [79, 199], [-3, 49], [64, 40], [-25, 51], [58, 99], [-14, 36], [119, 108], [-9, 167], [73, 94], [15, 63], [62, 16], [15, 69], [51, 77], [78, 58], [3, 31], [-98, 28], [-48, 132], [67, 85], [59, 131], [88, 85], [49, 7], [42, 63], [94, -27], [72, 7], [46, -63], [99, 25]], [[21174, 1095], [-63, 69], [38, 37], [47, -31], [122, 1], [233, 26], [5, -112], [34, -43], [-65, -59], [38, -73], [197, -124], [-47, -114], [-148, 2], [-6, 37], [-104, 102], [-125, 12], [-106, 103], [-64, 94], [14, 73]], [[24098, 18668], [-147, 8], [45, 76], [53, -7], [49, -77]], [[22872, 15350], [-92, -2], [-94, 55], [-199, 26], [-103, 46], [-58, -4], [-16, 43], [-65, -18], [-77, 74], [-99, 3], [-114, 133], [-60, -26], [-9, -134], [-103, -104], [-18, -92], [-267, 53], [-21, 48], [-80, 47], [-30, -12], [-92, 42], [-173, -21], [-81, 59], [-132, 44], [-91, 63]], [[20798, 15673], [-26, 64], [-34, -11], [-31, 62], [-306, -49], [-57, -53], [-50, 8], [-55, 132], [-61, 25], [-109, -19], [-69, 52], [0, 227], [-65, 47]], [[19935, 16158], [46, 96], [79, 69], [59, 104], [76, 14], [90, 76], [13, 71], [66, 4], [45, 81], [72, 41], [-32, 66], [-12, 104], [58, 81], [53, 26], [-59, 119]], [[20489, 17110], [63, 76], [97, 16], [45, 115], [106, 169], [-24, 40], [78, 102], [130, 3]], [[20984, 17631], [81, -4], [124, 71], [77, -7], [81, 32], [44, 110], [176, 53], [57, 54], [49, -15], [46, 58], [12, 120], [-46, 44], [55, 111], [-26, 94], [104, 41], [104, 10], [1, 85], [128, 6], [9, 27], [87, -19], [54, 44], [49, -24], [74, 13], [-4, 55], [276, 193], [74, -18], [122, 29], [53, 56], [40, -4], [49, 57], [-9, 97], [192, 109], [43, -24], [85, 13], [142, 129], [-88, 108], [10, 78], [37, 37], [89, 21], [69, -18], [108, 16], [92, 71], [242, 63], [23, 23], [122, -3], [19, -28]], [[24110, 19595], [-57, -2], [-198, -85], [-43, -88], [-165, -97], [-54, -57], [-4, -86], [-123, -93], [-194, -212], [-74, -258], [-33, -199], [-8, -135], [9, -118], [42, -155], [69, -124], [6, -219], [38, -186], [90, -200], [63, -85], [-49, -9], [39, -128], [41, 5], [-16, -89], [27, -226], [-25, -41], [-179, -51], [-23, -75], [10, -65], [44, -10], [30, -81], [-119, -101], [-81, -43], [9, -30], [-60, -83], [-74, -60], [-49, -109], [-26, -109], [-13, -167], [-106, -251], [18, -123]], [[21494, 21036], [88, -96], [65, 0], [3, -114], [-41, -64], [70, -25], [50, -123], [50, -42], [-51, -151], [12, -24], [114, -35], [71, -52], [15, -60], [-80, -142], [37, -26], [-35, -74], [37, -52], [180, -78], [96, 12], [-6, -40], [-204, 15], [-58, -53], [-125, 11], [-41, -27], [-11, -66], [39, -89], [-12, -85], [73, -15], [52, -47], [-146, -42], [-142, 40], [-87, -14], [-53, 100], [-103, 75], [-41, 111], [-70, 60], [-60, 16], [-111, -79], [-27, 30], [-9, 140], [101, 78], [24, 145], [-29, 76], [-88, 89], [-146, 29], [-58, 47], [14, 82], [152, 179], [29, 7], [99, 140], [110, -26], [12, 62], [135, 62], [3, 31], [103, 104]], [[12314, 10370], [-29, 0], [-6, 91], [66, -6], [-31, -85]], [[12093, 10314], [-40, 63], [47, 69], [43, -38], [-50, -94]], [[11851, 10113], [-84, -75], [-109, 11], [-44, -55], [10, -67], [-129, 0], [-49, 35], [124, 117], [418, 253], [62, -25], [18, -61], [-73, 8], [-79, -51], [-65, -90]], [[16167, 10882], [-39, -45], [50, -41], [-3, -127], [-89, -52], [-57, 39], [-99, 7], [-115, -36], [-36, 49], [-127, -37], [-44, 42], [31, 90], [-150, -17], [-42, -41], [-271, -4], [-130, 59], [-127, 12], [-124, 104], [-72, 96], [-18, 58], [-114, -30], [-46, 13], [-119, -21], [-101, 8], [-94, -77], [-175, 54], [-104, -38], [-43, -70], [-86, -14], [-63, -87], [-148, -14], [-7, -86], [-84, -38], [-84, -2], [27, -47], [-111, -3], [-16, -82], [-95, -52], [-23, -74], [-62, 18], [-44, 75], [-90, -29], [32, -160], [-36, -46], [-118, -30], [-176, 54], [-98, -17], [-89, 45], [-55, -8], [-79, 31]], [[12404, 10311], [29, 71], [-69, 112], [13, 396], [-10, 59], [35, 195], [34, 24], [80, 175], [100, 117], [-59, 38], [26, 180], [47, 143], [-74, -1], [-24, 77], [34, 11], [70, 167], [-35, 44], [152, 86], [82, 24], [66, 81], [-29, 33], [57, 37], [95, -28]], [[13024, 12352], [83, -51], [341, -89], [334, 19], [66, 34], [257, -14], [147, 24], [122, -82], [199, -68], [180, -41], [114, -6], [149, 12], [262, -63], [242, -8], [65, -24]], [[15585, 11995], [97, -194], [2, -127], [-100, -29], [-7, -129], [56, -174], [-6, -65], [-77, -134], [0, -58], [-38, -48], [31, -101], [71, 75], [52, -10], [-8, -84], [62, -38], [142, 3], [51, 60], [88, -20], [59, 29], [27, 53], [78, -73], [2, -49]], [[19721, 20447], [-5, -46], [57, -47], [41, 12], [30, -49], [143, -27], [91, -57], [46, 0], [56, -117], [141, 6], [78, -35], [-10, -35], [69, -25], [1, -134], [86, -75], [-94, -13], [29, -108], [-211, -142], [-95, 6], [-73, 29], [-99, -25], [15, -73], [-10, -113], [23, -21], [-102, -46], [57, -96], [-45, -45], [55, -46], [-37, -56], [84, -55], [56, 6], [23, -80], [56, -43], [-55, -32], [49, -61], [-43, -81], [168, -69], [131, 57], [62, -3], [81, -50], [9, -64], [44, -1], [81, -83], [14, -109], [70, -57], [-154, -121], [-14, -33], [75, -176], [97, -179], [155, -63], [-7, -38], [44, -103]], [[20489, 17110], [-99, -33], [-97, 48], [-58, 56], [-30, 92], [43, 85], [-47, 18], [-38, 71], [8, 137], [-88, 26], [-7, 58], [-59, 73], [-74, 44], [-91, -33], [-28, 24], [52, 148], [-58, 69], [58, 154], [-40, 51], [-156, 50], [-109, 69], [6, 52], [-89, 47], [-13, 61], [-153, -48], [-28, 82], [-62, -34], [-27, 65], [-44, 4], [-146, 62], [16, 27], [-156, 76], [60, 100], [-36, 133], [-108, 11], [-21, -27], [-142, 28], [-33, 23], [4, 74], [-116, -27], [-48, 34], [-81, 4], [-77, 48], [12, 84], [-21, 81], [-73, 67], [-54, 18], [-119, -38], [-79, 37], [-26, -39], [-109, -4]], [[17808, 19318], [37, 65], [69, 55], [64, 101], [-13, 82], [96, 157], [157, 180], [218, 77], [48, 58], [185, 84], [343, 71], [251, 145], [195, 41], [114, 43], [149, -30]], [[13774, 2698], [-38, 21], [67, 96], [24, 74], [90, 23], [50, -33], [-8, -49], [-65, -35], [-60, -66], [-60, -31]], [[14194, 3684], [10, 134], [-18, 129], [51, 162], [37, 23], [40, 94], [27, 150], [-12, 91], [-46, 41], [-29, 105], [15, 45], [6, 220], [38, 123], [54, 85], [30, 132], [-12, 323], [66, 196], [30, 192], [48, 48], [217, -61], [87, 27], [191, -28], [79, 55], [57, 68], [200, 160], [96, 17], [158, 60], [23, -51], [61, 18], [20, -129], [74, -20], [42, 41], [72, 12], [99, 104], [124, -2], [114, -46], [80, -57], [68, -101], [81, -85], [92, 36], [7, 71], [47, -7], [138, 91], [94, -7], [69, -79], [34, 36], [74, -92]], [[17230, 2220], [20, -78], [-34, -102], [15, -92], [-36, -48], [21, -119], [-18, -185], [38, -30], [-73, -68], [49, -154], [43, -16], [-9, -74], [-47, -50], [16, -244], [44, -86], [-81, -52], [-6, -57], [-68, -36], [-12, -76], [-83, -47], [-103, -25], [-31, -246], [132, -205], [31, -103], [-35, -27], [-81, 27], [-8, 76], [-81, 37], [-79, 101], [-61, -7], [-92, 27], [-1, 26], [-102, 16], [-103, 92], [-79, -16], [-67, -76], [21, -65], [-47, -91], [-80, -7], [-102, 98], [10, 200], [20, 44], [-60, 146], [-49, 17], [-76, 142], [0, 77], [52, 57], [15, 84], [61, 44], [-38, 153], [101, 46], [-45, 194], [-46, 43], [-31, 85], [17, 31], [-47, 186], [-61, 128], [18, 52], [-105, 188], [-126, 107], [11, 94], [-59, 150], [-3, 70], [-79, 105], [-157, 140], [-88, 150], [-94, 79], [-189, 121], [-498, 254], [-122, 75], [-85, 99], [32, 23], [-126, 62]], [[15461, 16153], [119, -84], [55, -113], [64, -21], [123, -143], [80, -61], [20, -47], [93, -59], [150, -39], [207, -162], [136, -50], [144, -16], [72, -52], [101, -107], [156, -10], [111, 36], [191, -16], [112, 64], [-36, 205], [125, 52], [44, -24], [91, 1], [99, -37], [64, 16], [62, -40], [84, 14], [82, -127], [108, -90], [70, -15], [44, 27], [20, 67], [168, 89], [31, -41], [51, 13], [93, 71], [81, -2], [24, 71], [103, 113], [173, 8], [33, 78], [108, 54], [45, 95], [66, 8], [55, -116], [104, 31], [16, 82], [56, 54], [14, 106], [93, 42]], [[19566, 16078], [59, -10], [231, 33], [79, 57]], [[20798, 15673], [-64, -37], [-41, -72], [-19, -115], [16, -45], [-74, -89], [-116, -1], [-18, -80], [-74, -38], [-67, -66], [34, -96], [-5, -59], [-117, -19], [-91, -52], [-1, -59], [-60, -69]], [[20101, 14776], [-82, 48], [-201, 29], [-37, -41], [-83, 3], [-72, 51], [-24, 50], [-54, -7], [-82, -140], [-42, -17], [-115, 60], [-73, -47], [-73, 9], [-96, -71], [-92, 85], [-42, -64], [-84, -14], [-79, -106], [-195, 7], [-62, -35], [-72, -101], [-161, -82], [-46, -52], [-32, 33], [-177, -6], [-49, -35], [-81, -168], [-49, -43], [-108, -27], [-89, 21], [-75, 49], [-110, -97], [-83, -33], [-159, 58], [-23, -119], [-60, -60], [-33, 18], [29, 60], [-58, 103], [-96, 3], [-22, 45], [-59, 1], [-55, -48], [-50, -143], [5, -146], [-143, -45], [-22, -70], [-122, -186], [-85, -61], [-6, -34], [-82, -20], [-76, -47], [-92, 66], [-80, 4], [-82, -28], [-179, 56]], [[15831, 13442], [-147, 106], [-72, -30], [-106, 79], [-30, 87], [13, 106], [-65, 97], [-18, 117], [-256, 37], [-148, 35], [-57, 63], [-53, 16], [-58, 84], [14, 60], [-115, 243], [-142, 65]], [[14591, 14607], [17, 52], [-130, 44], [53, 74], [91, 196], [49, 56], [79, 182], [53, 38], [60, 97], [92, -49], [47, 59], [12, 116], [49, 129], [179, 241], [52, 111], [83, 77], [84, 123]], [[15669, 8430], [18, -42], [-84, -93], [-43, -82], [22, -49], [-60, -80], [-90, -44], [-31, -73], [-69, -47], [-81, -132], [-2, -59], [-91, -124], [5, -20], [-139, -149], [-69, -29], [-249, -221], [-135, -82], [-28, -77], [-116, -1], [-46, -157], [-53, 6], [-77, -150], [-106, -252], [-50, -25], [-65, 64], [-116, -15], [-53, -78], [-63, -37], [-74, -82], [-120, 1], [-53, 71], [-62, -4], [-235, 30], [-25, -59], [-90, 42], [-39, -47], [-72, 58], [-62, 12], [-10, 63], [-74, -36], [-181, 73], [-109, -60]], [[12592, 6444], [4, 128], [-22, 99], [-101, 197], [-120, 125], [-174, 127], [-217, 128], [-150, 62], [-26, 64], [-116, 96], [23, 177], [39, 82], [131, 187], [48, 261], [85, 161], [-4, 158], [37, 21], [67, 359], [32, 9], [83, 170], [15, 109]], [[12226, 9164], [195, -130], [1, -33], [144, -63], [62, -86], [50, 65], [102, -59], [106, 26], [110, 196], [119, 26], [69, 61], [-9, 74], [68, -26], [63, 13], [-1, 107], [45, 53], [116, 0], [1, 65], [145, 2], [102, 97], [203, 14], [174, 63], [144, -43], [50, 43], [225, -97], [40, -67], [68, 51], [59, -49], [-96, -54], [64, -63], [68, -3], [46, -87], [-54, -25], [28, -53], [49, 5], [117, -46], [40, -55], [-112, -102], [23, -123], [-28, -29], [2, -89], [64, -117], [-10, -41], [-74, -61], [47, -52], [98, -21], [85, -65], [68, 21], [84, -38], [53, 59], [68, 30], [81, -40], [119, 43], [162, -31]], [[23063, 20564], [11, -68], [-46, -68], [-51, -12], [-108, 49], [-40, -49], [-70, -25], [37, -191], [44, 0], [46, -53], [-86, -83], [-20, 16], [-102, -45], [-72, 2], [-127, 97], [-84, -3], [-70, 27], [-254, 191], [-37, 164], [-88, 40], [-17, 35], [49, 28], [96, 6], [57, 47], [124, 22], [91, 68], [111, 57]], [[22457, 20816], [-11, -67], [115, 1], [146, -55], [99, 47], [75, -72], [48, -9], [134, -97]], [[11293, 27108], [0, -1]], [[11293, 27107], [-17, -14]], [[11276, 27093], [-17, -45], [-131, -96], [-39, 13], [-64, -44], [-110, 45], [96, 106], [85, -45], [78, 80], [119, 1]], [[11382, 27808], [70, -20], [-40, -53], [-46, 17], [16, 56]], [[11293, 27107], [0, 1]], [[11293, 27108], [0, -1]], [[11321, 27313], [-41, 16], [37, 115], [76, 28], [79, 83], [70, -26], [2, -75], [-126, -24], [-92, -48], [-5, -69]], [[11048, 25858], [-21, 68], [118, 5], [26, -21], [-86, -71], [-37, 19]], [[20101, 14776], [42, -84], [2, -62], [-156, -33], [-61, -68], [-63, -32], [-126, -17], [13, -126], [-45, -140], [90, -19], [134, -102], [79, -14], [-17, -74], [-44, -47], [27, -66], [-97, -73], [-58, -74], [-22, 14], [-81, -63], [16, -93], [-58, -95], [-42, -112], [-58, -80], [25, -119], [57, -2], [27, -59], [-38, -175], [28, -99], [-2, -82], [-96, -45], [46, -122], [-20, -67], [-78, -31], [-27, -100], [-61, -75], [-31, -180], [-46, -24], [6, -146], [-152, -82], [11, -62], [144, -114], [79, -225], [-11, -142], [-45, -62], [22, -91], [-76, -153], [6, -73], [-49, -79], [-24, -89], [-44, -30], [-81, 29], [-92, -66], [-5, -42], [-164, 21], [-11, -80], [56, -29], [-22, -64], [-70, -31], [31, -59], [-26, -115], [-74, -76], [-98, 36], [-107, -13], [-40, 18], [-35, -45], [-151, 24], [-41, -121], [-61, -36], [6, -38], [-93, -86], [128, -78], [-48, -71], [-109, -32], [-125, -66]], [[17995, 9768], [-31, 67], [35, 37], [-52, 70], [-50, -3], [-188, 43], [-84, 3]], [[17625, 9985], [-66, -15], [-65, 38], [-37, -15], [-89, 31], [-196, 0], [-43, -51], [-110, 38], [-154, -15], [-79, 76], [-44, 243], [-75, 92], [35, 129], [42, 39], [-7, 80], [38, 72], [-75, 93], [-65, -27], [-169, 37], [-91, 63], [-55, 13], [-153, -24]], [[15585, 11995], [168, 48], [80, 78], [-29, 90], [-145, -48], [-99, 78], [-65, 102], [-49, 6], [51, 105], [-43, 46], [96, 210], [-19, 30], [33, 134], [-50, 33], [46, 50], [-59, 92], [51, 2], [74, 70], [19, 139], [-79, 53], [31, 97], [195, -20], [39, 52]], [[7737, 8299], [-65, 62], [192, 49], [26, -44], [-7, -90], [-46, 9], [-87, -58], [-13, 72]], [[8934, 11775], [34, 16], [78, -65], [-77, -11], [-54, -64], [-48, 36], [67, 88]], [[9315, 8646], [90, 28], [-47, -118], [-46, 40], [3, 50]], [[8202, 9426], [36, 68], [64, -9], [-1, -164], [-19, -60], [-120, 4], [54, 59], [-14, 102]], [[7062, 9547], [25, 71], [64, -29], [-8, -40], [-81, -2]], [[8402, 9328], [90, 52], [17, -50], [-107, -2]], [[8771, 11205], [-61, 5], [-46, -61], [-66, 27], [-85, -105], [-4, -41], [-146, -46], [24, -39], [12, -120], [-67, -59], [16, -180], [-111, 26], [-52, -35], [-140, 5], [99, 76], [54, -36], [74, 59], [1, 63], [-76, 58], [68, 35], [41, 61], [-55, 34], [14, 78], [60, 106], [126, -54], [59, 9], [89, 108], [7, 70], [95, 16], [79, 41], [65, -38], [35, 19], [69, -74], [22, -81], [-72, -14], [10, -124], [69, -51], [-5, -112], [133, -47], [88, 37], [51, -10], [42, -59], [125, -32], [16, -124], [60, -27], [7, -40], [-99, -24], [-22, 62], [-182, -4], [-96, -81], [-101, -56], [-63, -61], [2, -136], [-59, 31], [-162, -26], [14, 71], [187, 130], [-23, 61], [-50, 21], [-121, -44], [44, 108], [-80, 74], [-34, 66], [79, -3], [72, -71], [75, -30], [8, 88], [52, 15], [-23, 98], [13, 55], [-50, 42], [14, 40], [-66, 19], [43, 59], [-13, 45], [-73, 70], [-10, 57]], [[15461, 16153], [73, 44], [219, 232], [33, 99], [99, 146], [63, 172], [59, 114], [33, 113], [97, 142], [70, 23], [142, 14], [16, 162], [119, 136], [232, 51], [80, 3], [32, 70], [160, 126], [44, 149], [84, 72]], [[17116, 18021], [81, -22], [95, 57], [65, -128], [125, -50]], [[17482, 17878], [29, -28], [64, 18], [34, -42], [107, 51], [14, -99], [-52, -76], [68, -11], [5, -57], [128, -125], [85, 11], [-14, -76], [110, -20], [27, -53], [88, -35], [65, -75], [60, 40], [72, -54], [48, -81], [12, -66], [-49, -58], [-32, -112], [-50, -37], [114, -104], [-14, -79], [-73, -37], [32, -156], [93, 17], [78, -28], [162, 86], [85, -22], [52, 33], [34, -35], [121, -24], [57, 32], [56, -14], [91, 39], [146, -35], [-31, -49], [102, -67], [63, -112], [88, -43], [29, -51], [-28, -91], [8, -75]], [[14223, 10237], [41, 51], [83, 6], [52, -38], [53, -82], [60, 49], [62, -10], [29, -85], [87, -14], [52, -95], [-91, -139], [-36, -4], [-82, 62], [-52, -3], [-102, -106], [-85, -34], [-67, 137], [-91, -5], [-102, 68], [-36, 73], [66, 135], [53, -30], [106, 64]], [[17482, 17878], [17, 107], [52, 100], [50, -12], [87, 83], [15, 55], [63, -12], [49, 33], [-9, 54], [47, 23], [132, -61], [41, -88], [82, 32], [-34, 131], [-44, 71], [-16, 85], [-115, 94], [-289, 77], [-139, 117]], [[17471, 18767], [2, 62], [75, 79], [46, 109], [47, 54], [35, 101], [98, 144], [34, 2]], [[19721, 20447], [137, 56], [35, -18], [145, 9], [111, 33], [234, 98], [90, 61], [79, 83], [-41, 37], [16, 91], [57, 39], [100, 138], [39, 18], [53, 172], [164, 53], [39, 87], [216, 112], [93, 0], [85, 59], [129, -19], [49, 37], [70, 2], [129, -59], [48, -47], [71, -24], [100, -113], [7, -129], [56, -55], [51, 0], [18, -94], [113, -86], [143, 35], [10, -33], [-59, -84], [44, -60], [105, -30]], [[23063, 20564], [116, -10], [-10, -73], [38, -9], [104, 48], [169, -41], [246, -5], [72, -29], [37, -75], [-62, -126], [75, -115], [35, -20], [-19, -114], [28, -85], [84, -74], [216, 29], [114, -45], [65, -50], [-11, -49], [-57, -7], [-76, -63], [-117, -56]], [[18080, 8891], [26, 43], [90, 33], [15, 103], [-155, 93], [-30, 66], [-65, -28], [-58, 65], [-88, 16], [6, 76], [126, 101], [-42, 34], [89, 30], [75, 59], [16, 107], [-90, 79]], [[22872, 15350], [-27, -73], [-80, -72], [-63, -93], [-17, -93], [-104, -105], [-68, -17], [-77, -111], [-200, -111], [-70, -83], [-32, -102], [11, -106], [39, -86], [-22, -91], [-64, -89], [-129, -83], [-99, -145], [-14, -87], [35, -148], [50, -95], [92, -84], [27, -69], [-30, -58], [-46, 15], [-6, -82], [-95, -65], [-89, -148], [35, -135], [-39, -115], [-12, -188], [-35, -163], [-70, -198], [-90, -168], [-19, -140], [18, -130], [-83, -196], [-44, -32], [-28, -76], [28, -89], [-46, -135], [-26, -155], [-33, -14], [-42, -148], [-4, -193], [-23, -121], [-95, -154], [-54, -232], [23, -161], [44, -55], [-69, -105], [-44, -202]], [[14194, 3684], [-71, -9], [-85, 32], [-177, 112], [-221, 171], [-150, 140], [14, 26], [-86, 82], [-265, 316], [7, 63], [-76, 135], [11, 128], [137, 117], [-38, 159], [-44, -56], [-35, 109], [-141, 273], [-143, 301], [-123, 332], [-9, 63], [-107, 266]], [[15669, 8430], [-32, 155], [-41, 49], [12, 158], [-12, 73], [102, 18], [86, -38], [143, -34], [64, 29], [1, 71], [54, 53], [119, -19], [-2, 34], [65, 60], [50, 10], [68, 92], [6, 49], [151, -13], [35, 68], [104, 91], [154, 51], [13, 70], [120, 164], [1, 51], [96, 24], [138, 69], [93, 122], [81, 29], [90, -17], [62, 50], [75, 2], [60, 34]], [[13024, 12352], [117, 125], [61, 42], [40, -13], [73, 57], [204, 383], [-95, 30], [108, 159], [57, 146], [122, 12], [5, 74], [58, 117], [82, 122], [159, 75], [12, 43], [-130, -2], [-3, 117], [124, 58], [190, -9], [31, 71], [35, 165], [-122, 0], [-36, -115], [-115, 20], [64, 123], [64, 39], [163, 170], [130, 2], [17, 57], [152, 187]], [[12226, 9164], [31, 92], [103, 124], [34, -10], [20, 76], [67, -9], [38, 63], [-24, 83], [-37, -12], [-38, 69], [19, 70], [-30, 72], [52, 65], [-65, 76], [-3, 66], [75, 89], [-3, 44], [-197, -15], [-34, 43], [-3, 124], [54, 33], [97, -17], [22, 21]], [[950, 16073], [-91, -45], [-68, -79], [-61, -128], [-68, -17], [-139, 68], [-130, 107], [137, 18], [10, 51], [63, 27], [-50, 209], [-98, 48], [26, 58], [86, 60], [58, 11], [198, -143], [153, -37], [100, 41], [9, 99], [59, 49], [-17, 115], [127, 67], [43, 53], [42, -15], [40, -97], [108, -11], [88, -209], [5, -87], [59, -64], [5, -66], [-75, -34], [30, -46], [-63, -23], [-10, -45], [-71, -45], [-59, 25], [-42, 66], [-90, 13], [-118, 56], [-196, -50]], [[298, 16054], [-72, -5], [-28, -53], [-84, -15], [-56, -57], [-58, 129], [65, 33], [13, 102], [143, 40], [101, -60], [-24, -114]], [[17116, 18021], [136, 160], [-44, 57], [-2, 121], [71, 184], [127, 173], [67, 51]]], "bbox": [118.21707123169105, 21.89671606253262, 122.00657456079266, 26.27675065458175]}</script>
+
+<script>
+(function(){
+  "use strict";
+  var STORAGE_KEY = "restaurant-scout-v1";
+
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    var seed = JSON.parse(document.getElementById("seed-data").textContent);
+    saveData(seed);
+    return seed;
+  }
+  function saveData(data){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+  }
+
+  var DATA = loadData();
+  var scope = "all";
+  var query = "";
+  var areaFilter = "";
+  var sortMode = "default";
+  var myLocation = null; /* {lat,lng,source:"gps"|"manual"} */
+  var manualPinMode = false;
+  var currentView = "list";
+
+  function haversine(lat1,lng1,lat2,lng2){
+    var R = 6371;
+    var dLat = (lat2-lat1)*Math.PI/180;
+    var dLng = (lng2-lng1)*Math.PI/180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+            Math.sin(dLng/2)*Math.sin(dLng/2);
+    var c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R*c;
+  }
+
+  function nextId(){
+    var max = 0;
+    DATA.forEach(function(e){ if(e.id > max) max = e.id; });
+    return max + 1;
+  }
+
+  function uniqueAreas(){
+    var set = {};
+    DATA.forEach(function(e){ if(e.area) set[e.area] = (set[e.area]||0)+1; });
+    return Object.keys(set).sort(function(a,b){ return set[b]-set[a]; });
+  }
+
+  function populateAreaSelect(){
+    var sel = document.getElementById("areaSelect");
+    var current = sel.value;
+    sel.innerHTML = '<option value="">所有地區</option>';
+    uniqueAreas().forEach(function(a){
+      var opt = document.createElement("option");
+      opt.value = a; opt.textContent = a;
+      sel.appendChild(opt);
+    });
+    sel.value = current;
+  }
+
+  function matchesFilters(e){
+    if(scope === "visited" && !e.visited) return false;
+    if(scope === "want" && e.visited) return false;
+    if(areaFilter && e.area !== areaFilter) return false;
+    if(query){
+      var q = query.toLowerCase();
+      var hay = (e.name+" "+(e.address||"")+" "+(e.note||"")).toLowerCase();
+      if(hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  }
+
+  function renderStats(){
+    document.getElementById("statVisited").textContent = DATA.filter(function(e){return e.visited;}).length;
+    document.getElementById("statWant").textContent = DATA.filter(function(e){return !e.visited;}).length;
+  }
+
+  function distanceKm(e){
+    if(!myLocation || e.lat == null || e.lng == null) return null;
+    return haversine(myLocation.lat, myLocation.lng, e.lat, e.lng);
+  }
+
+  function priceLabel(e){
+    var bits = [];
+    var d = distanceKm(e);
+    if(d != null) bits.push(d.toFixed(1)+" km");
+    if(e.area) bits.push(e.area);
+    if(e.price) bits.push(e.price);
+    if(e.mealType) bits.push(e.mealType);
+    return bits.join(" · ");
+  }
+
+  function filteredSortedData(){
+    var items = DATA.filter(matchesFilters);
+    if(sortMode === "distance" && myLocation){
+      items = items.slice().sort(function(a,b){
+        var da = distanceKm(a); var db = distanceKm(b);
+        if(da == null) da = Infinity;
+        if(db == null) db = Infinity;
+        return da-db;
+      });
+    } else if(sortMode === "rating"){
+      items = items.slice().sort(function(a,b){ return (b.rating||0)-(a.rating||0); });
+    }
+    return items;
+  }
+
+  function renderList(){
+    var list = document.getElementById("list");
+    var items = filteredSortedData();
+    list.innerHTML = "";
+    if(items.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "沒有符合的餐廳，換個篩選條件，或按右下角新增一間。";
+      list.appendChild(empty);
+      return;
+    }
+    items.forEach(function(e){
+      var card = document.createElement("div");
+      card.className = "card";
+      card.tabIndex = 0;
+      card.setAttribute("role","button");
+      var stampCls = e.visited ? "stamp visited" : "stamp want";
+      var stampTxt = e.visited ? "✓" : "?";
+      card.innerHTML =
+        '<div class="'+stampCls+'">'+stampTxt+'</div>'+
+        '<div class="card-body">'+
+          '<div class="name"></div>'+
+          '<div class="sub"></div>'+
+        '</div>'+
+        (e.rating ? '<div class="card-rating">'+e.rating+'★</div>' : '');
+      card.querySelector(".name").textContent = e.name;
+      card.querySelector(".sub").textContent = priceLabel(e) || e.address || "";
+      card.addEventListener("click", function(){ openDetail(e.id); });
+      card.addEventListener("keydown", function(ev){ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();openDetail(e.id);} });
+      list.appendChild(card);
+    });
+  }
+
+  function renderAll(){
+    renderStats();
+    populateAreaSelect();
+    renderList();
+    if(currentView === "map") renderMap();
+  }
+
+  function refreshCurrentView(){
+    renderList();
+    if(currentView === "map") renderMap();
+  }
+
+  document.getElementById("tabs").addEventListener("click", function(ev){
+    var t = ev.target.closest(".tab");
+    if(!t) return;
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.remove("active");});
+    t.classList.add("active");
+    scope = t.getAttribute("data-scope");
+    refreshCurrentView();
+  });
+
+  document.getElementById("search").addEventListener("input", function(ev){
+    query = ev.target.value.trim();
+    refreshCurrentView();
+  });
+
+  document.getElementById("areaSelect").addEventListener("change", function(ev){
+    areaFilter = ev.target.value;
+    refreshCurrentView();
+  });
+
+  document.getElementById("sortSelect").addEventListener("change", function(ev){
+    sortMode = ev.target.value;
+    refreshCurrentView();
+  });
+
+  function switchView(v){
+    currentView = v;
+    document.querySelectorAll("#viewToggle button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-view") === v);
+    });
+    document.getElementById("list").classList.toggle("hidden", v !== "list");
+    document.getElementById("mapWrap").classList.toggle("hidden", v !== "map");
+    if(v === "map") renderMap();
+  }
+
+  document.getElementById("viewToggle").addEventListener("click", function(ev){
+    var b = ev.target.closest("button");
+    if(!b) return;
+    switchView(b.getAttribute("data-view"));
+  });
+
+  /* ---------- location ---------- */
+  function setLocStatus(msg, isError){
+    var el = document.getElementById("locStatus");
+    el.textContent = msg;
+    el.classList.toggle("error", !!isError);
+  }
+
+  function onLocationChanged(){
+    document.getElementById("nearToggle").classList.toggle("disabled", !myLocation);
+    document.getElementById("locateBtn").classList.toggle("active", !!myLocation);
+    refreshCurrentView();
+  }
+
+  document.getElementById("locateBtn").addEventListener("click", function(){
+    if(!navigator.geolocation){
+      setLocStatus("這個瀏覽器不支援定位。切換到地圖模式,點一下地圖上你的位置即可手動設定。", true);
+      return;
+    }
+    setLocStatus("定位中…");
+    navigator.geolocation.getCurrentPosition(function(pos){
+      myLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude, source:"gps"};
+      setLocStatus("已定位你目前的位置");
+      onLocationChanged();
+    }, function(){
+      setLocStatus("沒有取得定位權限。切換到地圖模式,點一下地圖上你的位置即可手動設定。", true);
+      manualPinMode = true;
+      switchView("map");
+      updateMapHint();
+    }, {enableHighAccuracy:false, timeout:8000, maximumAge:60000});
+  });
+
+  document.getElementById("manualPinBtn").addEventListener("click", function(){
+    manualPinMode = true;
+    setLocStatus("點一下地圖，設定你目前的位置");
+    switchView("map");
+    updateMapHint();
+  });
+
+  function updateMapHint(){
+    var hint = document.querySelector(".map-hint");
+    if(!hint) return;
+    hint.textContent = manualPinMode ? "點一下地圖設定你的位置" : "拖曳平移・滾輪縮放・點點看詳情";
+  }
+
+  /* ---------- decide ---------- */
+  var lastPickId = null;
+  document.getElementById("decideBtn").addEventListener("click", function(){
+    var scopeVal = document.getElementById("decideScope").value;
+    var pool = DATA.filter(function(e){
+      if(scopeVal === "visited") return e.visited;
+      if(scopeVal === "want") return !e.visited;
+      return true;
+    }).filter(function(e){
+      if(areaFilter) return e.area === areaFilter;
+      return true;
+    });
+    var resultBox = document.getElementById("decideResult");
+    if(pool.length === 0){
+      resultBox.className = "decide-result show";
+      resultBox.innerHTML = '<div class="decide-empty">這個範圍裡還沒有餐廳，換個抽選範圍試試。</div>';
+      return;
+    }
+    var usedNear = false;
+    var nearOn = document.getElementById("nearCheck").checked && !!myLocation;
+    if(nearOn){
+      var withinRadius = pool.filter(function(e){
+        var d = distanceKm(e);
+        return d != null && d <= 5;
+      });
+      if(withinRadius.length){ pool = withinRadius; usedNear = true; }
+    }
+    var candidates = pool;
+    if(pool.length > 1 && lastPickId !== null){
+      var filtered = pool.filter(function(e){ return e.id !== lastPickId; });
+      if(filtered.length) candidates = filtered;
+    }
+    var pick = candidates[Math.floor(Math.random()*candidates.length)];
+    lastPickId = pick.id;
+    resultBox.className = "decide-result";
+    resultBox.innerHTML =
+      (nearOn && !usedNear ? '<div class="decide-empty">附近 5 公里內沒有符合的店，已經從全部範圍抽出。</div>' : '')+
+      '<div class="decide-card">'+
+        '<div class="name"></div>'+
+        '<div class="meta"></div>'+
+        '<div class="decide-actions">'+
+          '<button class="btn-line" id="reDecide">再抽一次</button>'+
+          '<button class="btn-line" id="viewPicked">看詳情</button>'+
+        '</div>'+
+      '</div>';
+    resultBox.querySelector(".name").textContent = pick.name;
+    resultBox.querySelector(".meta").textContent = priceLabel(pick) || pick.address || "";
+    void resultBox.offsetWidth;
+    resultBox.className = "decide-result show";
+    document.getElementById("reDecide").addEventListener("click", function(){
+      document.getElementById("decideBtn").click();
+    });
+    document.getElementById("viewPicked").addEventListener("click", function(){
+      openDetail(pick.id);
+    });
+  });
+
+  /* ---------- detail modal ---------- */
+  var detailBackdrop = document.getElementById("detailBackdrop");
+  var detailModal = document.getElementById("detailModal");
+
+  function closeDetail(){ detailBackdrop.classList.add("hidden"); }
+  detailBackdrop.addEventListener("click", function(ev){ if(ev.target === detailBackdrop) closeDetail(); });
+
+  function starsMarkup(current, editable){
+    var out = '<div class="stars-input" id="starsInput">';
+    for(var i=1;i<=5;i++){
+      out += '<button type="button" data-v="'+i+'" class="'+(i<=current?"on":"")+'">★</button>';
+    }
+    out += '</div>';
+    return out;
+  }
+
+  function openDetail(id){
+    var e = DATA.find(function(x){ return x.id === id; });
+    if(!e) return;
+    var rating = e.rating || 0;
+    detailModal.innerHTML =
+      '<div class="modal-handle"></div>'+
+      '<button class="close-x" id="closeDetail" aria-label="關閉">×</button>'+
+      '<h2></h2>'+
+      '<div class="field-group">'+
+        '<span class="field-label">狀態</span>'+
+        '<div class="pill-toggle" id="visitedToggle">'+
+          '<button data-v="1" class="'+(e.visited?"active":"")+'">已經去過</button>'+
+          '<button data-v="0" class="'+(!e.visited?"active":"")+'">想去清單</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="field-group">'+
+        '<span class="field-label">評分</span>'+
+        starsMarkup(rating, true)+
+      '</div>'+
+      '<div class="field-group">'+
+        '<span class="field-label">地址</span>'+
+        '<div class="field-value"></div>'+
+      '</div>'+
+      (distanceKm(e) != null ? '<div class="field-group"><span class="field-label">離你的距離</span><div class="field-value">'+distanceKm(e).toFixed(1)+' 公里</div></div>' : '')+
+      (e.url ? '<div class="field-group"><span class="field-label">Google Maps</span><div class="field-value"><a href="'+e.url+'" target="_blank" rel="noopener">開啟地圖連結 →</a></div></div>' : '')+
+      '<div class="field-group">'+
+        '<span class="field-label">筆記</span>'+
+        '<textarea id="noteInput" placeholder="這間吃什麼、下次要點什麼…"></textarea>'+
+      '</div>'+
+      '<div class="modal-actions">'+
+        '<button class="btn-primary" id="saveDetail">儲存</button>'+
+        '<button class="btn-danger" id="deleteDetail">刪除</button>'+
+      '</div>';
+    detailModal.querySelector("h2").textContent = e.name;
+    detailModal.querySelector(".field-value").textContent = e.address || "（沒有地址資料）";
+    detailModal.querySelector("#noteInput").value = e.note || "";
+
+    var curVisited = e.visited;
+    detailModal.querySelector("#visitedToggle").addEventListener("click", function(ev){
+      var b = ev.target.closest("button");
+      if(!b) return;
+      curVisited = b.getAttribute("data-v") === "1";
+      detailModal.querySelectorAll("#visitedToggle button").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active");
+    });
+
+    var curRating = rating;
+    detailModal.querySelector("#starsInput").addEventListener("click", function(ev){
+      var b = ev.target.closest("button");
+      if(!b) return;
+      curRating = parseInt(b.getAttribute("data-v"),10);
+      detailModal.querySelectorAll("#starsInput button").forEach(function(x){
+        x.classList.toggle("on", parseInt(x.getAttribute("data-v"),10) <= curRating);
+      });
+    });
+
+    detailModal.querySelector("#closeDetail").addEventListener("click", closeDetail);
+    detailModal.querySelector("#saveDetail").addEventListener("click", function(){
+      e.visited = curVisited;
+      e.rating = curRating || undefined;
+      e.note = detailModal.querySelector("#noteInput").value.trim();
+      saveData(DATA);
+      renderAll();
+      closeDetail();
+    });
+    detailModal.querySelector("#deleteDetail").addEventListener("click", function(){
+      if(!confirm("確定要刪除「"+e.name+"」嗎？")) return;
+      DATA = DATA.filter(function(x){ return x.id !== e.id; });
+      saveData(DATA);
+      renderAll();
+      closeDetail();
+    });
+
+    detailBackdrop.classList.remove("hidden");
+  }
+
+  /* ---------- add modal ---------- */
+  var addBackdrop = document.getElementById("addBackdrop");
+  var addModalBody = document.getElementById("addModalBody");
+
+  function closeAdd(){ addBackdrop.classList.add("hidden"); }
+  addBackdrop.addEventListener("click", function(ev){ if(ev.target === addBackdrop) closeAdd(); });
+
+  function openAdd(){
+    addModalBody.innerHTML =
+      '<div class="modal-handle"></div>'+
+      '<button class="close-x" id="closeAdd" aria-label="關閉">×</button>'+
+      '<h2>新增餐廳</h2>'+
+      '<div class="field-group">'+
+        '<span class="field-label">店名</span>'+
+        '<input type="text" id="newName" placeholder="店名" />'+
+      '</div>'+
+      '<div class="field-group">'+
+        '<span class="field-label">地區</span>'+
+        '<input type="text" id="newArea" placeholder="例如：台北市南港區" />'+
+      '</div>'+
+      '<div class="field-group">'+
+        '<span class="field-label">地址（選填）</span>'+
+        '<input type="text" id="newAddress" placeholder="地址" />'+
+      '</div>'+
+      '<div class="field-group">'+
+        '<span class="field-label">狀態</span>'+
+        '<div class="pill-toggle" id="newVisitedToggle">'+
+          '<button data-v="1">已經去過</button>'+
+          '<button data-v="0" class="active">想去清單</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="field-group">'+
+        '<span class="field-label">筆記（選填）</span>'+
+        '<textarea id="newNote" placeholder="想吃什麼、聽誰推薦的…"></textarea>'+
+      '</div>'+
+      '<div class="modal-actions">'+
+        '<button class="btn-primary" id="saveAdd">新增</button>'+
+      '</div>';
+
+    var curVisited = false;
+    addModalBody.querySelector("#newVisitedToggle").addEventListener("click", function(ev){
+      var b = ev.target.closest("button");
+      if(!b) return;
+      curVisited = b.getAttribute("data-v") === "1";
+      addModalBody.querySelectorAll("#newVisitedToggle button").forEach(function(x){x.classList.remove("active");});
+      b.classList.add("active");
+    });
+
+    addModalBody.querySelector("#closeAdd").addEventListener("click", closeAdd);
+    addModalBody.querySelector("#saveAdd").addEventListener("click", function(){
+      var name = addModalBody.querySelector("#newName").value.trim();
+      if(!name){ addModalBody.querySelector("#newName").focus(); return; }
+      var entry = {
+        id: nextId(),
+        name: name,
+        area: addModalBody.querySelector("#newArea").value.trim() || "其他",
+        address: addModalBody.querySelector("#newAddress").value.trim(),
+        note: addModalBody.querySelector("#newNote").value.trim(),
+        visited: curVisited,
+        source: "manual",
+        lat: null, lng: null, url: "", date: ""
+      };
+      DATA.push(entry);
+      saveData(DATA);
+      renderAll();
+      closeAdd();
+    });
+
+    addBackdrop.classList.remove("hidden");
+  }
+
+  document.getElementById("addFab").addEventListener("click", openAdd);
+
+  /* ---------- map ---------- */
+  var mapSvg = document.getElementById("mapSvg");
+  var mapWrap = document.getElementById("mapWrap");
+  var mapCallout = document.getElementById("mapCallout");
+  var mapProj = null;
+  var mapPanX = 0, mapPanY = 0, mapZoom = 1;
+  var selectedPointId = null;
+  var activePointers = {};
+  var dragState = null;
+  var pinchState = null;
+
+  function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+  function computeProjection(points){
+    var lats = points.map(function(p){return p.lat;});
+    var lngs = points.map(function(p){return p.lng;});
+    var minLat = Math.min.apply(null, lats), maxLat = Math.max.apply(null, lats);
+    var minLng = Math.min.apply(null, lngs), maxLng = Math.max.apply(null, lngs);
+    if(minLat === maxLat){ minLat -= 0.015; maxLat += 0.015; }
+    if(minLng === maxLng){ minLng -= 0.015; maxLng += 0.015; }
+    var avgLatRad = (minLat+maxLat)/2 * Math.PI/180;
+    var lngScale = Math.cos(avgLatRad) || 1;
+    var rawW = (maxLng-minLng)*lngScale;
+    var rawH = (maxLat-minLat);
+    var VW = 1000, VH = 700, PAD = 50;
+    var fitScale = Math.min((VW-2*PAD)/rawW, (VH-2*PAD)/rawH);
+    if(!isFinite(fitScale) || fitScale <= 0) fitScale = 1;
+    var offX = PAD + Math.max(0,((VW-2*PAD)-rawW*fitScale)/2);
+    var offY = PAD + Math.max(0,((VH-2*PAD)-rawH*fitScale)/2);
+    return {
+      VW: VW, VH: VH,
+      project: function(lat,lng){
+        return {
+          x: (lng-minLng)*lngScale*fitScale + offX,
+          y: (maxLat-lat)*fitScale + offY
+        };
+      },
+      unproject: function(x,y){
+        return {
+          lat: maxLat - (y-offY)/fitScale,
+          lng: (x-offX)/(fitScale*lngScale) + minLng
+        };
+      }
+    };
+  }
+
+  function svgPoint(clientX, clientY){
+    var pt = mapSvg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    var ctm = mapSvg.getScreenCTM();
+    if(!ctm) return {x:0,y:0};
+    var p = pt.matrixTransform(ctm.inverse());
+    return {x:p.x, y:p.y};
+  }
+
+  function localFromViewBox(vx,vy){
+    return { x:(vx-mapPanX)/mapZoom, y:(vy-mapPanY)/mapZoom };
+  }
+
+  function updateMapTransform(){
+    var g = document.getElementById("mapG");
+    if(g) g.setAttribute("transform","translate("+mapPanX+","+mapPanY+") scale("+mapZoom+")");
+  }
+
+  function zoomAt(clientX, clientY, factor){
+    var vp = svgPoint(clientX, clientY);
+    var local = localFromViewBox(vp.x, vp.y);
+    var newZoom = clamp(mapZoom*factor, 0.5, 6);
+    mapPanX = vp.x - local.x*newZoom;
+    mapPanY = vp.y - local.y*newZoom;
+    mapZoom = newZoom;
+    updateMapTransform();
+  }
+
+  function hideCallout(){ mapCallout.classList.add("hidden"); }
+
+  function showCallout(e, screenX, screenY){
+    var rect = mapWrap.getBoundingClientRect();
+    mapCallout.style.left = (screenX-rect.left)+"px";
+    mapCallout.style.top = (screenY-rect.top)+"px";
+    var d = distanceKm(e);
+    mapCallout.innerHTML =
+      '<div class="name"></div>'+
+      '<div class="meta"></div>'+
+      '<button type="button" id="calloutDetail">看詳情</button>';
+    mapCallout.querySelector(".name").textContent = e.name;
+    mapCallout.querySelector(".meta").textContent = priceLabel(e) || e.address || "";
+    mapCallout.classList.remove("hidden");
+    mapCallout.querySelector("#calloutDetail").addEventListener("click", function(){
+      openDetail(e.id);
+    });
+  }
+
+  /* ---- Taiwan county outlines (decoded once from an embedded TopoJSON) ---- */
+  var countyFeatures = [];
+  var TW_BOUNDS = {minLat:21.5, maxLat:26.5, minLng:117.9, maxLng:122.3};
+
+  function decodeTopo(topo){
+    var scale = topo.transform.scale, translate = topo.transform.translate;
+    var arcs = topo.arcs.map(function(arc){
+      var x=0,y=0;
+      return arc.map(function(pt){
+        x += pt[0]; y += pt[1];
+        return [x*scale[0]+translate[0], y*scale[1]+translate[1]];
+      });
+    });
+    function arcCoords(index){
+      var rev = index < 0;
+      var i = rev ? ~index : index;
+      var coords = arcs[i];
+      return rev ? coords.slice().reverse() : coords;
+    }
+    function ring(indices){
+      var pts = [];
+      indices.forEach(function(idx){
+        var seg = arcCoords(idx);
+        if(pts.length) seg = seg.slice(1);
+        pts = pts.concat(seg);
+      });
+      return pts;
+    }
+    var objName = Object.keys(topo.objects)[0];
+    var geoms = topo.objects[objName].geometries;
+    return geoms.map(function(g){
+      var rings = [];
+      if(g.type === "Polygon"){
+        g.arcs.forEach(function(idxs){ rings.push(ring(idxs)); });
+      } else if(g.type === "MultiPolygon"){
+        g.arcs.forEach(function(poly){ poly.forEach(function(idxs){ rings.push(ring(idxs)); }); });
+      }
+      return { name: (g.properties && g.properties.name) || "", rings: rings };
+    });
+  }
+
+  try{
+    var topoRaw = JSON.parse(document.getElementById("tw-topo").textContent);
+    countyFeatures = decodeTopo(topoRaw);
+  }catch(e){ countyFeatures = []; }
+
+  function featureBounds(feature){
+    var best = null, bestLen = -1;
+    feature.rings.forEach(function(r){ if(r.length > bestLen){ bestLen = r.length; best = r; } });
+    var minLat=Infinity,maxLat=-Infinity,minLng=Infinity,maxLng=-Infinity;
+    (best||[]).forEach(function(pt){
+      var lng=pt[0], lat=pt[1];
+      if(lat<minLat)minLat=lat; if(lat>maxLat)maxLat=lat;
+      if(lng<minLng)minLng=lng; if(lng>maxLng)maxLng=lng;
+    });
+    return {lat:(minLat+maxLat)/2, lng:(minLng+maxLng)/2};
+  }
+
+  function inTaiwan(lat,lng){
+    return lat >= TW_BOUNDS.minLat && lat <= TW_BOUNDS.maxLat &&
+           lng >= TW_BOUNDS.minLng && lng <= TW_BOUNDS.maxLng;
+  }
+
+  var taiwanProj = computeProjection([
+    {lat: TW_BOUNDS.minLat, lng: TW_BOUNDS.minLng},
+    {lat: TW_BOUNDS.maxLat, lng: TW_BOUNDS.maxLng}
+  ]);
+
+  function drawCounties(g, svgns){
+    var cg = document.createElementNS(svgns, "g");
+    cg.setAttribute("id","mapCounties");
+    countyFeatures.forEach(function(feature){
+      if(!feature.rings.length) return;
+      var d = feature.rings.map(function(r){
+        var parts = r.map(function(pt,i){
+          var p = mapProj.project(pt[1], pt[0]);
+          return (i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1);
+        });
+        return parts.join("")+"Z";
+      }).join(" ");
+      var path = document.createElementNS(svgns,"path");
+      path.setAttribute("d", d);
+      path.setAttribute("class","county-shape");
+      cg.appendChild(path);
+    });
+    countyFeatures.forEach(function(feature){
+      if(!feature.rings.length || !feature.name) return;
+      var c = featureBounds(feature);
+      var p = mapProj.project(c.lat, c.lng);
+      var text = document.createElementNS(svgns,"text");
+      text.setAttribute("x", p.x.toFixed(1));
+      text.setAttribute("y", p.y.toFixed(1));
+      text.setAttribute("class","county-label");
+      text.textContent = feature.name;
+      cg.appendChild(text);
+    });
+    g.appendChild(cg);
+  }
+
+  function renderMap(){
+    var allPoints = filteredSortedData().filter(function(e){ return e.lat != null && e.lng != null; });
+    var points = allPoints.filter(function(e){ return inTaiwan(e.lat, e.lng); });
+    var excludedCount = allPoints.length - points.length;
+
+    mapSvg.innerHTML = "";
+    hideCallout();
+    selectedPointId = null;
+
+    var noteEl = document.getElementById("mapNote");
+    if(excludedCount > 0){
+      noteEl.textContent = "另有 "+excludedCount+" 間海外地點未顯示，可切換列表查看";
+      noteEl.classList.remove("hidden");
+    } else {
+      noteEl.classList.add("hidden");
+    }
+
+    mapProj = taiwanProj;
+    mapPanX = 0; mapPanY = 0; mapZoom = 1;
+
+    var svgns = "http://www.w3.org/2000/svg";
+    var g = document.createElementNS(svgns, "g");
+    g.setAttribute("id","mapG");
+
+    drawCounties(g, svgns);
+
+    if(points.length === 0){
+      mapSvg.appendChild(g);
+      updateMapTransform();
+      var empty = document.createElement("div");
+      empty.className = "map-empty";
+      empty.textContent = "這個篩選範圍裡沒有帶座標的餐廳可以顯示在地圖上。";
+      mapWrap.appendChild(empty);
+      updateMapHint();
+      return;
+    }
+    var oldEmpty = mapWrap.querySelector(".map-empty");
+    if(oldEmpty) oldEmpty.remove();
+
+    points.forEach(function(e){
+      var p = mapProj.project(e.lat, e.lng);
+      var c = document.createElementNS(svgns, "circle");
+      c.setAttribute("cx", p.x);
+      c.setAttribute("cy", p.y);
+      c.setAttribute("r", 6);
+      c.setAttribute("class","map-point "+(e.visited ? "map-point-visited" : "map-point-want"));
+      c.setAttribute("data-id", e.id);
+      g.appendChild(c);
+    });
+
+    if(myLocation){
+      var mp = mapProj.project(myLocation.lat, myLocation.lng);
+      var ring = document.createElementNS(svgns,"circle");
+      ring.setAttribute("cx",mp.x); ring.setAttribute("cy",mp.y); ring.setAttribute("r",8);
+      ring.setAttribute("class","map-me-ring");
+      var dot = document.createElementNS(svgns,"circle");
+      dot.setAttribute("cx",mp.x); dot.setAttribute("cy",mp.y); dot.setAttribute("r",7);
+      dot.setAttribute("class","map-me-dot");
+      g.appendChild(ring);
+      g.appendChild(dot);
+    }
+
+    mapSvg.appendChild(g);
+    updateMapTransform();
+    updateMapHint();
+  }
+
+  function pointerDist(p1,p2){
+    var dx=p1.x-p2.x, dy=p1.y-p2.y;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  mapSvg.addEventListener("pointerdown", function(ev){
+    activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+    var ids = Object.keys(activePointers);
+    if(ids.length === 1){
+      dragState = {
+        startClientX: ev.clientX, startClientY: ev.clientY,
+        startPanX: mapPanX, startPanY: mapPanY,
+        moved: false, targetId: ev.target.getAttribute && ev.target.getAttribute("data-id")
+      };
+      mapSvg.classList.add("grabbing");
+      mapSvg.setPointerCapture(ev.pointerId);
+    } else if(ids.length === 2){
+      dragState = null;
+      var pts = ids.map(function(id){ return activePointers[id]; });
+      pinchState = {
+        startDist: pointerDist(pts[0], pts[1]),
+        startZoom: mapZoom,
+        midClientX: (pts[0].x+pts[1].x)/2,
+        midClientY: (pts[0].y+pts[1].y)/2
+      };
+    }
+  });
+
+  mapSvg.addEventListener("pointermove", function(ev){
+    if(!activePointers[ev.pointerId]) return;
+    activePointers[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+    var ids = Object.keys(activePointers);
+    if(ids.length === 2 && pinchState){
+      var pts = ids.map(function(id){ return activePointers[id]; });
+      var dist = pointerDist(pts[0], pts[1]);
+      var factor = dist / (pinchState.startDist || dist);
+      var vp = svgPoint(pinchState.midClientX, pinchState.midClientY);
+      var local = localFromViewBox(vp.x, vp.y);
+      var newZoom = clamp(pinchState.startZoom*factor, 0.5, 6);
+      mapPanX = vp.x - local.x*newZoom;
+      mapPanY = vp.y - local.y*newZoom;
+      mapZoom = newZoom;
+      updateMapTransform();
+      return;
+    }
+    if(dragState){
+      var vpStart = svgPoint(dragState.startClientX, dragState.startClientY);
+      var vpNow = svgPoint(ev.clientX, ev.clientY);
+      var dx = vpNow.x - vpStart.x, dy = vpNow.y - vpStart.y;
+      if(Math.abs(ev.clientX-dragState.startClientX) > 3 || Math.abs(ev.clientY-dragState.startClientY) > 3){
+        dragState.moved = true;
+      }
+      mapPanX = dragState.startPanX + dx;
+      mapPanY = dragState.startPanY + dy;
+      updateMapTransform();
+    }
+  });
+
+  function endPointer(ev){
+    delete activePointers[ev.pointerId];
+    if(Object.keys(activePointers).length < 2) pinchState = null;
+    if(Object.keys(activePointers).length === 0){
+      mapSvg.classList.remove("grabbing");
+      if(dragState && !dragState.moved){
+        handleMapTap(ev, dragState.targetId);
+      }
+      dragState = null;
+    }
+  }
+  mapSvg.addEventListener("pointerup", endPointer);
+  mapSvg.addEventListener("pointercancel", endPointer);
+
+  function handleMapTap(ev, targetId){
+    if(targetId){
+      var e = DATA.find(function(x){ return String(x.id) === String(targetId); });
+      if(!e) return;
+      selectedPointId = e.id;
+      document.querySelectorAll(".map-point").forEach(function(c){
+        c.classList.toggle("selected", c.getAttribute("data-id") === String(e.id));
+      });
+      showCallout(e, ev.clientX, ev.clientY);
+      return;
+    }
+    if(manualPinMode){
+      var vp = svgPoint(ev.clientX, ev.clientY);
+      var local = localFromViewBox(vp.x, vp.y);
+      var geo = mapProj.unproject(local.x, local.y);
+      myLocation = {lat: geo.lat, lng: geo.lng, source:"manual"};
+      manualPinMode = false;
+      setLocStatus("已手動設定你的位置（點在地圖上的位置）");
+      updateMapHint();
+      onLocationChanged();
+      return;
+    }
+    hideCallout();
+  }
+
+  mapSvg.addEventListener("wheel", function(ev){
+    ev.preventDefault();
+    var factor = ev.deltaY < 0 ? 1.15 : 1/1.15;
+    zoomAt(ev.clientX, ev.clientY, factor);
+  }, {passive:false});
+
+  document.getElementById("mapZoomIn").addEventListener("click", function(){
+    var rect = mapSvg.getBoundingClientRect();
+    zoomAt(rect.left+rect.width/2, rect.top+rect.height/2, 1.3);
+  });
+  document.getElementById("mapZoomOut").addEventListener("click", function(){
+    var rect = mapSvg.getBoundingClientRect();
+    zoomAt(rect.left+rect.width/2, rect.top+rect.height/2, 1/1.3);
+  });
+  document.getElementById("mapReset").addEventListener("click", function(){
+    renderMap();
+  });
+
+  renderAll();
+})();
+</script>
