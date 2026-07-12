@@ -224,6 +224,7 @@ body{
 }
 .near-toggle.disabled{opacity:.45;pointer-events:none;}
 .near-toggle input{accent-color:var(--accent);}
+.nearby-filter{margin:6px 18px 0;}
 .decide-card .name{
   font-family:var(--font-display);
   font-weight:800;
@@ -670,6 +671,9 @@ textarea{min-height:64px;resize:vertical;}
     <button class="loc-btn" id="manualPinBtn">手動設定位置</button>
   </section>
   <div class="loc-status" id="locStatus"></div>
+  <label class="near-toggle nearby-filter" id="nearOnlyToggle">
+    <input type="checkbox" id="nearOnlyCheck" /> 只顯示我方圓 5 公里內的店
+  </label>
 
   <section class="list" id="list"></section>
 
@@ -725,6 +729,7 @@ textarea{min-height:64px;resize:vertical;}
   var myLocation = null; /* {lat,lng,source:"gps"|"manual"} */
   var manualPinMode = false;
   var currentView = "list";
+  var nearOnlyFilter = false;
 
   function haversine(lat1,lng1,lat2,lng2){
     var R = 6371;
@@ -765,6 +770,11 @@ textarea{min-height:64px;resize:vertical;}
     if(scope === "visited" && !e.visited) return false;
     if(scope === "want" && e.visited) return false;
     if(areaFilter && e.area !== areaFilter) return false;
+    if(nearOnlyFilter){
+      if(!myLocation) return false;
+      var d = distanceKm(e);
+      if(d == null || d > 5) return false;
+    }
     if(query){
       var q = query.toLowerCase();
       var hay = (e.name+" "+(e.address||"")+" "+(e.note||"")).toLowerCase();
@@ -906,9 +916,10 @@ textarea{min-height:64px;resize:vertical;}
     refreshCurrentView();
   }
 
-  document.getElementById("locateBtn").addEventListener("click", function(){
+  function requestLocation(onFail){
     if(!navigator.geolocation){
       setLocStatus("這個瀏覽器不支援定位。切換到地圖模式,點一下地圖上你的位置即可手動設定。", true);
+      if(onFail) onFail();
       return;
     }
     setLocStatus("定位中…");
@@ -921,7 +932,25 @@ textarea{min-height:64px;resize:vertical;}
       manualPinMode = true;
       switchView("map");
       updateMapHint();
+      if(onFail) onFail();
     }, {enableHighAccuracy:false, timeout:8000, maximumAge:60000});
+  }
+
+  document.getElementById("locateBtn").addEventListener("click", function(){
+    requestLocation();
+  });
+
+  document.getElementById("nearOnlyCheck").addEventListener("change", function(ev){
+    nearOnlyFilter = ev.target.checked;
+    if(nearOnlyFilter && !myLocation){
+      requestLocation(function(){
+        document.getElementById("nearOnlyCheck").checked = !!myLocation;
+        nearOnlyFilter = !!myLocation;
+        refreshCurrentView();
+      });
+    } else {
+      refreshCurrentView();
+    }
   });
 
   document.getElementById("manualPinBtn").addEventListener("click", function(){
