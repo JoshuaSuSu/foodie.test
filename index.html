@@ -225,6 +225,19 @@ body{
 .near-toggle.disabled{opacity:.45;pointer-events:none;}
 .near-toggle input{accent-color:var(--accent);}
 .nearby-filter{margin:6px 18px 0;}
+.radius-input{
+  width:46px;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  font-size:12.5px;
+  color:var(--ink);
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:2px 4px;
+  text-align:center;
+}
+.radius-input:focus{outline:2px solid var(--accent);outline-offset:1px;}
 .decide-card .name{
   font-family:var(--font-display);
   font-weight:800;
@@ -667,7 +680,7 @@ textarea{min-height:64px;resize:vertical;}
       </select>
     </div>
     <label class="near-toggle disabled" id="nearToggle">
-      <input type="checkbox" id="nearCheck" /> 優先抽附近 5 公里內的店
+      <input type="checkbox" id="nearCheck" /> 優先抽附近 <span id="decideRadiusNum">5</span> 公里內的店
     </label>
     <div class="decide-result" id="decideResult"></div>
   </section>
@@ -692,7 +705,9 @@ textarea{min-height:64px;resize:vertical;}
   </section>
   <div class="loc-status" id="locStatus"></div>
   <label class="near-toggle nearby-filter" id="nearOnlyToggle">
-    <input type="checkbox" id="nearOnlyCheck" /> 只顯示我方圓 5 公里內的店
+    <input type="checkbox" id="nearOnlyCheck" /> 只顯示我方圓
+    <input type="number" id="radiusInput" class="radius-input" value="5" min="0.5" max="50" step="0.5" />
+    公里內的店
   </label>
 
   <section class="list" id="list"></section>
@@ -752,6 +767,17 @@ textarea{min-height:64px;resize:vertical;}
   var currentView = "list";
   var nearOnlyFilter = false;
 
+  var RADIUS_KEY = "restaurant-scout-radius-km";
+  function loadRadiusKm(){
+    try{
+      var raw = localStorage.getItem(RADIUS_KEY);
+      var n = raw != null ? parseFloat(raw) : NaN;
+      if(!isNaN(n) && n > 0) return n;
+    }catch(e){}
+    return 5;
+  }
+  var nearRadiusKm = loadRadiusKm();
+
   function haversine(lat1,lng1,lat2,lng2){
     var R = 6371;
     var dLat = (lat2-lat1)*Math.PI/180;
@@ -794,7 +820,7 @@ textarea{min-height:64px;resize:vertical;}
     if(nearOnlyFilter){
       if(!myLocation) return false;
       var d = distanceKm(e);
-      if(d == null || d > 5) return false;
+      if(d == null || d > nearRadiusKm) return false;
     }
     if(query){
       var q = query.toLowerCase();
@@ -974,6 +1000,23 @@ textarea{min-height:64px;resize:vertical;}
     }
   });
 
+  var radiusInputEl = document.getElementById("radiusInput");
+  radiusInputEl.value = nearRadiusKm;
+  document.getElementById("decideRadiusNum").textContent = nearRadiusKm;
+
+  function applyRadiusChange(){
+    var n = parseFloat(radiusInputEl.value);
+    if(isNaN(n) || n <= 0) n = 5;
+    n = Math.min(50, Math.max(0.5, n));
+    nearRadiusKm = n;
+    radiusInputEl.value = n;
+    document.getElementById("decideRadiusNum").textContent = n;
+    try{ localStorage.setItem(RADIUS_KEY, String(n)); }catch(e){}
+    if(nearOnlyFilter) refreshCurrentView();
+  }
+  radiusInputEl.addEventListener("change", applyRadiusChange);
+  radiusInputEl.addEventListener("click", function(ev){ ev.stopPropagation(); });
+
   document.getElementById("manualPinBtn").addEventListener("click", function(){
     manualPinMode = true;
     setLocStatus("點一下地圖，設定你目前的位置");
@@ -1010,7 +1053,7 @@ textarea{min-height:64px;resize:vertical;}
     if(nearOn){
       var withinRadius = pool.filter(function(e){
         var d = distanceKm(e);
-        return d != null && d <= 5;
+        return d != null && d <= nearRadiusKm;
       });
       if(withinRadius.length){ pool = withinRadius; usedNear = true; }
     }
@@ -1023,7 +1066,7 @@ textarea{min-height:64px;resize:vertical;}
     lastPickId = pick.id;
     resultBox.className = "decide-result";
     resultBox.innerHTML =
-      (nearOn && !usedNear ? '<div class="decide-empty">附近 5 公里內沒有符合的店，已經從全部範圍抽出。</div>' : '')+
+      (nearOn && !usedNear ? '<div class="decide-empty">附近 '+nearRadiusKm+' 公里內沒有符合的店，已經從全部範圍抽出。</div>' : '')+
       '<div class="decide-card">'+
         '<div class="name"></div>'+
         '<div class="meta"></div>'+
